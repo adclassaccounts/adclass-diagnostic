@@ -1,4 +1,11 @@
 <meta charset="utf-8">
+<!-- Tracking, same tags adclass.com loads: GTM, GA4, Meta Pixel, Hyros. The claude.ai preview blocks these; they run on diagnostic.adclass.com. -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-N4CNWVQ");</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ45LL5W1N"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-ZJ45LL5W1N");</script>
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","9547401458639686");fbq("track","PageView");</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=9547401458639686&ev=PageView&noscript=1" /></noscript>
+<script>(function(){var s=document.createElement("script");s.type="text/javascript";s.src="https://t.adclass.com/v1/lst/universal-script?ph=c05c1bc1df7152adff0993615104b61c0e8b8db3c8efe36dde2c74073191a067&tag=!clicked&ref_url="+encodeURI(document.URL);(document.head||document.body).appendChild(s);})();</script>
 <title>Meta Ads Diagnostic</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
@@ -373,7 +380,12 @@
   function show(id) { screens.forEach((s) => { $(s).hidden = s !== id; }); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function track(ev, data) {
     try { (window.dataLayer = window.dataLayer || []).push({ event: ev, ...data }); } catch (e) {}
-    try { if (typeof fbq === "function" && ev === "quiz_lead") fbq("track", "Lead", { content_name: data.result }); } catch (e) {}
+    try {
+      if (typeof fbq !== "function") return;
+      if (ev === "quiz_start") fbq("trackCustom", "QuizStart");
+      if (ev === "quiz_lead") fbq("track", "Lead", { content_name: data.result, content_category: "meta-ads-diagnostic" });
+      if (ev === "quiz_result") fbq("trackCustom", "QuizResult", { result: data.result, route: data.route });
+    } catch (e) {}
   }
   const utm = {};
   try { new URLSearchParams(location.search).forEach((v, k) => { if (/^utm_/.test(k) || k === "ref") utm[k] = v; }); } catch (e) {}
