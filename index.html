@@ -144,12 +144,10 @@
   footer { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 13px; opacity: 0.85; }
   footer a { text-decoration: none; }
   footer a:hover { text-decoration: underline; }
-  #s-intro { display: flex; flex-direction: column; gap: 56px; }
-  .hero { min-height: calc(100svh - 150px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 18px; padding-bottom: 4vh; position: relative; }
-  .cue { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-decoration: none; opacity: 0.8; }
-  .cue:hover { opacity: 1; }
-  .teaser { display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center; scroll-margin-top: 24px; padding-bottom: 24px; }
-  .teaser .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  #s-intro { display: flex; flex-direction: column; gap: 36px; }
+  .hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 18px; padding-top: 18px; }
+  .teaser { display: flex; flex-direction: column; gap: 14px; align-items: center; text-align: center; scroll-margin-top: 24px; padding-bottom: 24px; }
+  .teaser .eyebrow { font-size: 13px; color: #fff; opacity: 0.9; }
   .car { position: relative; width: 100%; margin: 10px 0 6px; }
   .track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 16px; padding: 4px 16px 18px; margin: 0 -16px; position: relative; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .track::-webkit-scrollbar { display: none; }
@@ -185,7 +183,6 @@
       <div class="row" style="justify-content:center">
         <button class="btn primary" id="startBtn" type="button">Start the diagnostic</button>
       </div>
-      <a class="cue" href="#patterns">See the four patterns <span aria-hidden="true">&darr;</span></a>
     </div>
     <!-- Teaser: the four result panels, animating, so the fold shows what the result looks like -->
     <div class="teaser" id="patterns">
