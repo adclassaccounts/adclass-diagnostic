@@ -150,13 +150,20 @@
   .cue:hover { opacity: 1; }
   .teaser { display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center; scroll-margin-top: 24px; padding-bottom: 24px; }
   .teaser .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
-  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; margin: 10px 0 14px; }
-  .tcard { background: var(--navy); color: #fff; border-radius: 18px; overflow: hidden; text-align: left; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+  .car { position: relative; width: 100%; margin: 10px 0 6px; }
+  .track { display: flex; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-left: 16px; padding: 4px 16px 18px; margin: 0 -16px; position: relative; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .track::-webkit-scrollbar { display: none; }
+  .tcard { flex: 0 0 min(84%, 440px); scroll-snap-align: start; background: var(--navy); color: #fff; border-radius: 18px; overflow: hidden; text-align: left; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+  .dots { display: flex; gap: 8px; justify-content: center; }
+  .dots button { width: 8px; height: 8px; border-radius: 4px; border: 0; padding: 0; background: rgba(255, 255, 255, 0.45); cursor: pointer; transition: width 0.2s ease, background 0.2s ease; }
+  .dots button[aria-current="true"] { background: #fff; width: 24px; }
+  .arrow { position: absolute; top: 34%; width: 42px; height: 42px; border-radius: 50%; border: 0; background: #fff; color: var(--navy); font-size: 20px; font-weight: 700; cursor: pointer; display: none; place-items: center; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22); }
+  .arrow.prev { left: -8px; } .arrow.next { right: -8px; }
+  @media (min-width: 720px) { .arrow { display: grid; } .arrow:hover { transform: scale(1.06); } }
   .tcard canvas { display: block; width: 100%; }
   .tcard .tc { padding: 12px 16px 16px; }
   .tcard h3 { font-size: 18px; margin: 0 0 4px; }
   .tcard p { font-size: 14px; opacity: 0.8; line-height: 1.4; }
-  @media (max-width: 560px) { .tgrid { grid-template-columns: 1fr; } }
   .screen[hidden] { display: none !important; }
   .fade { animation: fade 0.25s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -185,11 +192,16 @@
       <p class="eyebrow">What you get</p>
       <h2>Every stuck account is one of four patterns.</h2>
       <p class="lead">Your result names yours, shows the mechanism behind it, and gives you the fix in order.</p>
-      <div class="tgrid">
-        <div class="tcard"><canvas data-k="C" data-off="0" width="640" height="400"></canvas><div class="tc"><h3>The ceiling account</h3><p>Works at one budget and falls apart above it.</p></div></div>
-        <div class="tcard"><canvas data-k="R" data-off="2.7" width="640" height="400"></canvas><div class="tc"><h3>The slow rot</h3><p>The numbers look fine and sales keep getting worse.</p></div></div>
-        <div class="tcard"><canvas data-k="O" data-off="4.9" width="640" height="400"></canvas><div class="tc"><h3>The one-ad account</h3><p>One ad carries everything, and every ad dies.</p></div></div>
-        <div class="tcard"><canvas data-k="P" data-off="1.6" width="640" height="400"></canvas><div class="tc"><h3>Starting from zero</h3><p>No spend yet, so you get to build it right.</p></div></div>
+      <div class="car">
+        <div class="track" id="track" aria-label="The four patterns">
+          <div class="tcard"><canvas data-k="C" data-off="1.2" width="640" height="400"></canvas><div class="tc"><h3>The ceiling account</h3><p>Works at one budget and falls apart above it.</p></div></div>
+          <div class="tcard"><canvas data-k="R" data-off="2.7" width="640" height="400"></canvas><div class="tc"><h3>The slow rot</h3><p>The numbers look fine and sales keep getting worse.</p></div></div>
+          <div class="tcard"><canvas data-k="O" data-off="4.9" width="640" height="400"></canvas><div class="tc"><h3>The one-ad account</h3><p>One ad carries everything, and every ad dies.</p></div></div>
+          <div class="tcard"><canvas data-k="P" data-off="1.6" width="640" height="400"></canvas><div class="tc"><h3>Starting from zero</h3><p>No spend yet, so you get to build it right.</p></div></div>
+        </div>
+        <button class="arrow prev" id="carPrev" type="button" aria-label="Previous pattern">&larr;</button>
+        <button class="arrow next" id="carNext" type="button" aria-label="Next pattern">&rarr;</button>
+        <div class="dots" id="dots"></div>
       </div>
       <div class="row" style="justify-content:center">
         <button class="btn primary" id="startBtn2" type="button">Find your pattern</button>
@@ -760,7 +772,7 @@
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
     // teaser: the four small panels on the intro, one loop, running only while on screen
     let tz = [], traf = 0, tt0 = 0, tio = null;
-    function tframe(now) { const t = (now - tt0) / 1000; tz.forEach((it) => paint(it, it.k, t + it.off)); traf = requestAnimationFrame(tframe); }
+    function tframe(now) { const t = (now - tt0) / 1000; tz.forEach((it) => { if (it.vis) paint(it, it.k, t + it.off); }); traf = requestAnimationFrame(tframe); }
     function teaserRun() { if (traf || reduced || document.hidden || !tz.some((it) => it.vis)) return; tt0 = performance.now(); traf = requestAnimationFrame(tframe); }
     function teaserStop() { if (traf) cancelAnimationFrame(traf); traf = 0; }
     function teaser(canvases) {
@@ -793,6 +805,25 @@
   $("startBtn").addEventListener("click", startQuiz);
   $("startBtn2").addEventListener("click", startQuiz);
   VIZ.teaser(document.querySelectorAll(".tcard canvas"));
+  // Teaser carousel: scroll-snap track, dots, arrows, and a slow auto-advance that stops the moment the visitor takes over.
+  (() => {
+    const track = $("track"), cards = [...track.children], dots = $("dots");
+    const noMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let cur = 0, auto = 0, onScreen = false;
+    cards.forEach((c, i) => { const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label", "Pattern " + (i + 1)); b.addEventListener("click", () => goTo(i, true)); dots.appendChild(b); });
+    const mark = () => { dots.querySelectorAll("button").forEach((b, i) => b.setAttribute("aria-current", i === cur ? "true" : "false")); };
+    const goTo = (i, user) => { cur = (i + cards.length) % cards.length; track.scrollTo({ left: cards[cur].offsetLeft - 16, behavior: noMotion ? "auto" : "smooth" }); mark(); if (user) stopAuto(); };
+    const stopAuto = () => { if (auto) clearInterval(auto); auto = 0; };
+    const startAuto = () => { if (auto || noMotion || !onScreen) return; auto = setInterval(() => { if (!document.hidden) goTo(cur + 1); }, 4500); };
+    let tick = 0;
+    track.addEventListener("scroll", () => { if (tick) return; tick = requestAnimationFrame(() => { tick = 0; const w = cards[0].offsetWidth + 14; const i = Math.round(track.scrollLeft / w); if (i !== cur && i >= 0 && i < cards.length) { cur = i; mark(); } }); }, { passive: true });
+    ["pointerdown", "touchstart", "wheel", "keydown"].forEach((ev) => track.addEventListener(ev, stopAuto, { passive: true }));
+    track.addEventListener("mouseenter", stopAuto);
+    $("carPrev").addEventListener("click", () => goTo(cur - 1, true));
+    $("carNext").addEventListener("click", () => goTo(cur + 1, true));
+    if ("IntersectionObserver" in window) new IntersectionObserver((es) => { onScreen = es[0].isIntersecting; onScreen ? startAuto() : stopAuto(); }, { threshold: 0.4 }).observe(track);
+    mark();
+  })();
   $("backBtn").addEventListener("click", () => { if (state.i > 0) { state.i--; renderQ(); } });
   $("gateBack").addEventListener("click", () => { state.i = QUESTIONS.length - 1; renderQ(); show("s-q"); });
   $("restart").addEventListener("click", () => { VIZ.stop(); state.i = 0; state.answers = {}; state.result = null; $("stepLabel").textContent = "2-minute diagnostic"; show("s-intro"); VIZ.teaser(document.querySelectorAll(".tcard canvas")); });
