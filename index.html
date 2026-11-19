@@ -530,7 +530,9 @@
 
   // ---- Result visuals: the reels' canvas scenes, looped, in the page's colors ----
   const VIZ = (() => {
-    const W = 640, H = 400, TAU = Math.PI * 2;
+    // Two canvases share every scene: landscape 640×400 on wide screens, portrait 640×800 (4:5) on phones.
+    const W = 640, TAU = Math.PI * 2;
+    let H = 400, PORTRAIT = false;
     const WHITE = "#ffffff", GREEN = "#2ad17d", CORAL = "#ff5b3d", NAVY = "#0c1d37";
     const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
     const lerp = (a, b, p) => a + (b - a) * p;
@@ -554,15 +556,21 @@
     function xMark(x, y, r, p, a, lw = 2) { if (p <= 0) return; const q = clamp(p * 2); line(x - r, y - r, lerp(x - r, x + r, q), lerp(y - r, y + r, q), a, lw); const q2 = clamp(p * 2 - 1); if (q2 > 0) line(x + r, y - r, lerp(x + r, x - r, q2), lerp(y - r, y + r, q2), a, lw); }
     function flow(x1, y1, x2, y2, t, a, n = 4, rate = 0.8, r = 4) { if (a <= 0.004) return; for (let k = 0; k < n; k++) { const u = (t * rate + k / n) % 1; const f = Math.sin(Math.PI * u); for (let j = 0; j < 3; j++) { const uu = u - j * 0.03; if (uu < 0) continue; dot(lerp(x1, x2, uu), lerp(y1, y2, uu), r * (1 - j * 0.25), a * f * (1 - j * 0.3)); } } }
     const shakeX = (t, t0, d, amp) => { const u = (t - t0) / d; return u <= 0 || u >= 1 ? 0 : Math.sin(u * 30) * amp * (1 - u); };
-    function headline(lines, x, y, a, color = WHITE, size = 21) { lines.forEach((l, i) => label(l, x, y + i * (size * 1.3), a, size, 800, "left", color)); }
+    function headline(lines, x, y, a, color = WHITE, size = 21, align = "left") { lines.forEach((l, i) => label(l, x, y + i * (size * 1.3), a, size, 800, align, color)); }
+    // Headlines read from the top left on the wide panel and sit centered above the figure on the tall one.
+    const HEAD = () => (PORTRAIT ? { x: 320, y: 76, align: "center" } : null);
 
     // C: one angle reaches one pocket; budget buys outside it; new angles open new pockets.
     const DISC = (() => { const r = rng(7), pts = []; while (pts.length < 230) { const x = r() * 2 - 1, y = r() * 2 - 1; if (x * x + y * y <= 1) pts.push({ x, y, j: r() }); } return pts; })();
     const inC = (x, y, c) => (x - c[0]) ** 2 + (y - c[1]) ** 2 <= c[2] * c[2];
+    const POCK0 = [[-45, 25, 40], [45, -65, 34], [54, 47, 32], [-62, -57, 30]];
     function vizC(t) {
       const L = 9.5, T = t % L, s = win(T, 0, L, 0.4, 0.5);
-      const cx = 170, cy = 215, R = 140;
-      const POCK = [[125, 240, 40], [215, 150, 34], [224, 262, 32], [108, 158, 30]];
+      const Y = PORTRAIT
+        ? { cx: 320, cy: 350, R: 165, hx: 320, hy: 76, ha: "center", bx0: 200, by: 690, lx: 320, ly: 640, la: "center" }
+        : { cx: 170, cy: 215, R: 140, hx: 365, hy: 95, ha: "left", bx0: 375, by: 300, lx: 365, ly: 300, la: "left" };
+      const { cx, cy, R } = Y, K = R / 140;
+      const POCK = POCK0.map(([dx, dy, r]) => [cx + dx * K, cy + dy * K, r * K]);
       const pk = prog(T, 1.0, 0.5);
       const more = [0, 1, 2].map((k) => prog(T, 5.6 + k * 0.3, 0.4));
       col(WHITE); ring(cx, cy, R, s * 0.5, 2);
@@ -572,40 +580,43 @@
         let l0 = inC(x, y, POCK[0]) ? pk : 0, lg = 0;
         for (let k = 1; k < 4; k++) if (inC(x, y, POCK[k])) lg = Math.max(lg, more[k - 1]);
         const lit = Math.max(l0, lg); col(lg > 0.05 ? GREEN : WHITE);
-        dot(x, y, lerp(2.4, 4.2, lit), s * lerp(0.22, 1, lit));
+        dot(x, y, lerp(2.4, 4.2, lit) * K, s * lerp(0.22, 1, lit));
       });
       col(WHITE); ring(POCK[0][0], POCK[0][1], POCK[0][2], s * pk, 2.5);
       label("Your angle's pocket", POCK[0][0], POCK[0][1] + POCK[0][2] + 14, s * pk * (1 - more[0]), 12, 700);
       if (T > 2.4) for (let k = 0; k < 9; k++) {
         const ang = (k / 9) * TAU + 0.4, tx = cx + Math.cos(ang) * R * 0.8, ty = cy + Math.sin(ang) * R * 0.78;
         const u = clamp((T - 2.4 - k * 0.1) / 0.9); if (u <= 0) continue;
-        const [x, y] = arcP(POCK[0][0], POCK[0][1], tx, ty, ease(u), 30);
+        const [x, y] = arcP(POCK[0][0], POCK[0][1], tx, ty, ease(u), 30 * K);
         const dark = prog(T, 3.6 + k * 0.05, 0.5);
-        col(WHITE); dot(x, y, 4.5, s * (1 - dark * 0.7) * (1 - more[0]));
-        if (u >= 1) { col(CORAL); xMark(x, y, 5, prog(T, 3.9 + k * 0.05, 0.3), s * (1 - more[0]), 2); }
+        col(WHITE); dot(x, y, 4.5 * K, s * (1 - dark * 0.7) * (1 - more[0]));
+        if (u >= 1) { col(CORAL); xMark(x, y, 5 * K, prog(T, 3.9 + k * 0.05, 0.3), s * (1 - more[0]), 2); }
       }
-      for (let k = 1; k < 4; k++) { col(GREEN); ring(POCK[k][0], POCK[k][1], POCK[k][2], s * more[k - 1], 2.5); burst(POCK[k][0], POCK[k][1], t, Math.floor(t / L) * L + 5.6 + (k - 1) * 0.3, 20, 90, 0.7, s); }
-      // right column
+      for (let k = 1; k < 4; k++) { col(GREEN); ring(POCK[k][0], POCK[k][1], POCK[k][2], s * more[k - 1], 2.5); burst(POCK[k][0], POCK[k][1], t, Math.floor(t / L) * L + 5.6 + (k - 1) * 0.3, 20 * K, 90 * K, 0.7, s); }
+      // headlines + the budget/cost bars
       const A = win(T, 0.5, 2.6, 0.3, 0.3), B = win(T, 2.6, 5.6, 0.3, 0.3), Cc = win(T, 5.6, L - 0.3, 0.3, 0.3);
-      headline(["One angle reaches", "one pocket."], 365, 95, s * A);
-      headline(["More budget buys", "outside the pocket."], 365, 95, s * B);
-      headline(["New angles open", "new pockets."], 365, 95, s * Cc, GREEN);
+      headline(["One angle reaches", "one pocket."], Y.hx, Y.hy, s * A, WHITE, 21, Y.ha);
+      headline(["More budget buys", "outside the pocket."], Y.hx, Y.hy, s * B, WHITE, 21, Y.ha);
+      headline(["New angles open", "new pockets."], Y.hx, Y.hy, s * Cc, GREEN, 21, Y.ha);
       if (B > 0.004) {
-        const g = prog(T, 2.9, 1.8); col(WHITE);
-        for (let k = 0; k < 5; k++) { const gk = clamp(g * 5 - k), bx = 375 + k * 48, h = (30 + k * 28) * gk; rrect(bx, 300 - h, 18, h, 4, s * B, 2, true); const h2 = (26 + k * 30) * gk; rrect(bx + 22, 300 - h2, 18, h2, 4, s * B * 0.7, 2, false); }
-        line(370, 300, 615, 300, s * B * 0.5, 2);
-        rrect(375, 322, 10, 10, 2, s * B, 2, true); label("Budget", 391, 327, s * B, 12, 700, "left");
-        rrect(470, 322, 10, 10, 2, s * B * 0.8, 2, false); label("Cost per customer", 486, 327, s * B, 12, 700, "left");
+        const g = prog(T, 2.9, 1.8), bx0 = Y.bx0, by = Y.by; col(WHITE);
+        for (let k = 0; k < 5; k++) { const gk = clamp(g * 5 - k), bx = bx0 + k * 48, h = (30 + k * 28) * gk; rrect(bx, by - h, 18, h, 4, s * B, 2, true); const h2 = (26 + k * 30) * gk; rrect(bx + 22, by - h2, 18, h2, 4, s * B * 0.7, 2, false); }
+        line(bx0 - 5, by, bx0 + 240, by, s * B * 0.5, 2);
+        rrect(bx0, by + 22, 10, 10, 2, s * B, 2, true); label("Budget", bx0 + 16, by + 27, s * B, 12, 700, "left");
+        rrect(bx0 + 95, by + 22, 10, 10, 2, s * B * 0.8, 2, false); label("Cost per customer", bx0 + 111, by + 27, s * B, 12, 700, "left");
       }
-      if (Cc > 0.004) label("Ten new angles open ten new pockets.", 365, 300, s * Cc * 0.85, 13, 700, "left");
+      if (Cc > 0.004) label("Ten new angles open ten new pockets.", Y.lx, Y.ly, s * Cc * 0.85, 13, 700, Y.la);
     }
 
     // R: the dashboard looks fine while sales sink.
     function vizR(t) {
       const L = 8, T = t % L, s = win(T, 0, L, 0.4, 0.5);
-      const x0 = 55, x1 = 345, yf = 120, yB = 340;
-      col(WHITE); rrect(36, 62, 330, 300, 12, s * 0.35, 1.5);
-      pill(200, 40, "Optimizing for: Leads", s, 0, 12);
+      const Y = PORTRAIT
+        ? { box: [40, 82, 560, 330], x0: 65, x1: 575, yf: 150, yB: 382, px: 320, py: 46, cards: [[40, 442], [330, 442]], cw: 270, dx: 320, dy: 568, hx: 320, hy: 650, ha: "center" }
+        : { box: [36, 62, 330, 300], x0: 55, x1: 345, yf: 120, yB: 340, px: 200, py: 40, cards: [[400, 80], [400, 165]], cw: 215, dx: 507, dy: 262, hx: 400, hy: 312, ha: "left" };
+      const { x0, x1, yf, yB, cw } = Y;
+      col(WHITE); rrect(...Y.box, 12, s * 0.35, 1.5);
+      pill(Y.px, Y.py, "Optimizing for: Leads", s, 0, 12);
       ctx.globalAlpha = s; ctx.lineWidth = 3.5; ctx.beginPath();
       for (let i = 0; i <= 40; i++) { const u = i / 40, yy = yf + Math.sin(u * 18 + t * 4) * 2.5; i ? ctx.lineTo(lerp(x0, x1, u), yy) : ctx.moveTo(lerp(x0, x1, u), yy); }
       ctx.stroke();
@@ -618,91 +629,103 @@
       const u = (t * 0.3) % 1; dot(lerp(x0, x1, u), lerp(yf + 40, yB - 10, Math.pow(u, 1.4) * sink), 5, s);
       // dashboard cards
       col(WHITE);
-      [["CTR", "steady", 80], ["Cost per lead", "flat", 165]].forEach(([nm, st, y], k) => {
-        const a = s * prog(T, 0.4 + k * 0.3, 0.4);
-        rrect(400, y, 215, 68, 10, a * 0.6, 1.5);
-        label(nm, 414, y + 20, a, 13, 700, "left"); label(st, 414, y + 46, a * 0.75, 12, 500, "left");
+      [["CTR", "steady"], ["Cost per lead", "flat"]].forEach(([nm, st], k) => {
+        const [x, y] = Y.cards[k], a = s * prog(T, 0.4 + k * 0.3, 0.4);
+        rrect(x, y, cw, 68, 10, a * 0.6, 1.5);
+        label(nm, x + 14, y + 20, a, 13, 700, "left"); label(st, x + 14, y + 46, a * 0.75, 12, 500, "left");
         ctx.globalAlpha = a; ctx.lineWidth = 2; ctx.beginPath();
-        for (let i = 0; i <= 20; i++) { const uu = i / 20, xx = lerp(520, 585, uu), yy = y + 34 + Math.sin(uu * 9 + t * 2 + k) * 4; i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
+        for (let i = 0; i <= 20; i++) { const uu = i / 20, xx = lerp(x + cw - 95, x + cw - 30, uu), yy = y + 34 + Math.sin(uu * 9 + t * 2 + k) * 4; i ? ctx.lineTo(xx, yy) : ctx.moveTo(xx, yy); }
         ctx.stroke();
-        col(GREEN); line(596, y + 36, 601, y + 42, a, 2.5); line(601, y + 42, 610, y + 28, a, 2.5); col(WHITE);
+        col(GREEN); line(x + cw - 19, y + 36, x + cw - 14, y + 42, a, 2.5); line(x + cw - 14, y + 42, x + cw - 5, y + 28, a, 2.5); col(WHITE);
       });
-      pill(507, 262, "Dashboard: looks fine", s * prog(T, 1.4, 0.4), 1, 12);
+      pill(Y.dx, Y.dy, "Dashboard: looks fine", s * prog(T, 1.4, 0.4), 1, 12);
       const bad = prog(T, 3.4, 0.5);
-      headline(["Sales down", "every month."], 400, 312, s * bad, CORAL, 20);
+      headline(["Sales down", "every month."], Y.hx, Y.hy, s * bad, CORAL, PORTRAIT ? 24 : 20, Y.ha);
     }
 
     // O: one ad carries the spend, tires, and everything on top of it falls.
     function vizO(t) {
       const L = 8.5, T = t % L, s = win(T, 0, L, 0.4, 0.5);
-      const x0 = 40, yB = 330, n = 10, bw = 22, gap = 10, pitch = bw + gap, tallI = 3, cxT = x0 + tallI * pitch + bw / 2;
+      const Y = PORTRAIT
+        ? { x0: 55, yB: 700, bw: 40, gap: 14, tallH: 420, tiredH: 240, sk: 1.7, budY: 196, flow0: 214, hx: 320, hy: 70, ha: "center", sx: 320, sy: 150, sa: "center", slabW: 200 }
+        : { x0: 40, yB: 330, bw: 22, gap: 10, tallH: 240, tiredH: 140, sk: 1, budY: 38, flow0: 56, hx: 400, hy: 110, ha: "left", sx: 400, sy: 300, sa: "left", slabW: 160 };
+      const { x0, yB, bw, gap } = Y, n = 10, pitch = bw + gap, tallI = 3, cxT = x0 + tallI * pitch + bw / 2;
       const appear = prog(T, 0.1, 0.6), tired = ease(prog(T, 3.0, 1.6)), brk = ease(prog(T, 5.0, 0.5));
       const wob = T > 3.0 && T < 5.0 ? Math.sin((T - 3.0) * 9) * 0.03 * (1 + 2 * tired) : 0;
       let topY = yB; col(WHITE);
       for (let i = 0; i < n; i++) {
         const bx = x0 + i * pitch, tall = i === tallI;
-        const hh = tall ? lerp(240, 140, tired) * (1 - brk * 0.85) : 12 + 10 * hash(i, 2);
+        const hh = tall ? lerp(Y.tallH, Y.tiredH, tired) * (1 - brk * 0.85) : (12 + 10 * hash(i, 2)) * Y.sk;
         if (tall) topY = yB - hh;
         rrect(bx, yB - hh * appear, bw, hh * appear, 5, s * (tall ? 1 : 0.45), 2, true);
       }
       line(x0, yB, x0 + n * pitch - gap, yB, s * 0.5 * appear, 2);
       const fl = prog(T, 0.8, 0.5) * (1 - brk);
-      flow(cxT, 56, cxT, topY - 38, t, s * fl, 5, 0.7, 4);
-      label("Budget", cxT, 38, s * fl, 12, 700);
-      pill(cxT, 354, "68% of spend", s * prog(T, 1.2, 0.4), 0, 11);
+      flow(cxT, Y.flow0, cxT, topY - 38, t, s * fl, 5, 0.7, 4);
+      label("Budget", cxT, Y.budY, s * fl, 12, 700);
+      pill(cxT, yB + 24, "68% of spend", s * prog(T, 1.2, 0.4), 0, 11);
       const sl = prog(T, 1.6, 0.4);
       if (sl > 0.004) {
         ctx.save(); ctx.translate(cxT, lerp(topY - 18, yB - 36, brk)); ctx.rotate(wob + brk * 0.35);
-        rrect(-80, -14, 160, 28, 8, s * sl, 2); label("All your results", 0, 1, s * sl, 12, 800);
+        rrect(-Y.slabW / 2, -14, Y.slabW, 28, 8, s * sl, 2); label("All your results", 0, 1, s * sl, 12, 800);
         ctx.restore();
       }
       const dx = shakeX(T, 5.2, 0.6, 8);
       col(CORAL); burst(cxT + dx, yB - 30, t, Math.floor(t / L) * L + 5.2, 16, 130, 0.8, s, 2.5);
       const A = win(T, 0.6, 3.1, 0.3, 0.3), B = win(T, 3.1, 5.2, 0.3, 0.3), Cc = win(T, 5.2, L - 0.3, 0.3, 0.3);
-      headline(["One ad carries", "the whole account."], 400, 110, s * A);
-      headline(["Its pocket runs out.", "Costs climb."], 400, 110, s * B);
-      headline(["When it dies,", "everything dies."], 400, 110, s * Cc, CORAL);
-      label("Nothing on the bench is ready.", 400, 300, s * Cc * 0.85, 13, 700, "left");
+      headline(["One ad carries", "the whole account."], Y.hx, Y.hy, s * A, WHITE, 21, Y.ha);
+      headline(["Its pocket runs out.", "Costs climb."], Y.hx, Y.hy, s * B, WHITE, 21, Y.ha);
+      headline(["When it dies,", "everything dies."], Y.hx, Y.hy, s * Cc, CORAL, 21, Y.ha);
+      label("Nothing on the bench is ready.", Y.sx, Y.sy, s * Cc * 0.85, 13, 700, Y.sa);
     }
 
     // P: launch angles in ABO; one finds its pocket; judge at 2–3× target.
     function vizP(t) {
       const L = 8.5, T = t % L, s = win(T, 0, L, 0.4, 0.5);
-      const XS = [70, 195, 320, 445, 570], y = 95, w = 100, h = 90, winI = 2;
+      const Y = PORTRAIT
+        ? { y: 200, w: 104, h: 120, title: ["Launch five to ten angles,", "each in its own ad set"], ty: 66, pillY: 158, flow0: 172, my: 545, judge: ["Judge every ad only after it", "spends 2–3× your target cost"], jy: 672, js: 15 }
+        : { y: 95, w: 100, h: 90, title: ["Launch five to ten angles, each in its own ad set"], ty: 28, pillY: 62, flow0: 75, my: 300, judge: ["Judge every ad only after it spends 2–3× your target cost"], jy: 372, js: 13 };
+      const XS = [70, 195, 320, 445, 570], { y, w, h } = Y, winI = 2;
       const found = prog(T, 3.6, 0.5);
-      col(WHITE); label("Launch five to ten angles, each in its own ad set", 320, 28, s * prog(T, 0.2, 0.4), 14, 700);
+      col(WHITE); Y.title.forEach((l, i) => label(l, 320, Y.ty + i * 24, s * prog(T, 0.2, 0.4), 14, 700));
       XS.forEach((x, k) => {
         const a = s * prog(T, 0.5 + k * 0.15, 0.4), lit = k === winI ? found : 0, dim = k === winI ? 0 : 0.5 * found;
         col(lit > 0.05 ? GREEN : WHITE);
-        pill(x, 62, "$100/day", a * (1 - dim), 0, 10);
-        flow(x, 75, x, y + 2, t + k * 0.29, a * prog(T, 1.2, 0.4) * (k === winI ? 1 : 1 - 0.7 * found), 3, 0.8, 3);
+        pill(x, Y.pillY, "$100/day", a * (1 - dim), 0, 10);
+        flow(x, Y.flow0, x, y + 2, t + k * 0.29, a * prog(T, 1.2, 0.4) * (k === winI ? 1 : 1 - 0.7 * found), 3, 0.8, 3);
         rrect(x - w / 2, y, w, h, 10, a * (1 - dim * 0.6), lit > 0.5 ? 3 : 1.5);
-        for (let i = 0; i < 3; i++) rrect(x - 38 + i * 28, y + 24, 22, 42, 4, a * (1 - dim) * lerp(0.5, 1, lit), 1.5, lit > 0.05 && i === 1);
+        for (let i = 0; i < 3; i++) rrect(x - 38 + i * 28, y + h * 0.27, 22, h * 0.47, 4, a * (1 - dim) * lerp(0.5, 1, lit), 1.5, lit > 0.05 && i === 1);
         label("Angle " + (k + 1), x, y + h + 14, a * (1 - dim), 12, 700);
         if (k === winI) { burst(x, y + h / 2, t, Math.floor(t / L) * L + 3.6, 30, 110, 0.7, s, 2.5); pill(x, y + h + 40, "Found its pocket", s * found, 1, 11, GREEN); }
       });
       // spend meter: judge at 2–3× target
-      const mx = (v) => lerp(70, 570, v / 400), my = 300, ma = s * prog(T, 1.0, 0.5);
+      const mx = (v) => lerp(70, 570, v / 400), my = Y.my, ma = s * prog(T, 1.0, 0.5);
       col(WHITE); rrect(mx(200), my - 16, mx(300) - mx(200), 32, 6, ma * 0.14, 1, true);
       rrect(70, my - 7, 500, 14, 7, ma * 0.5, 1.5);
       const f = ease(clamp((T - 1.6) / 2.6)) * 300;
       col(GREEN); rrect(70, my - 7, Math.max(14, mx(f) - 70), 14, 7, ma, 1.5, true); col(WHITE);
       [1, 2, 3].forEach((k) => { line(mx(k * 100), my - 24, mx(k * 100), my + 24, ma * 0.6, 2); label(k + "× target", mx(k * 100), my + 38, ma, 11, 700); });
-      label("Judge every ad only after it spends 2–3× your target cost", 320, 372, ma * prog(T, 2.2, 0.5), 13, 700);
+      Y.judge.forEach((l, i) => label(l, 320, Y.jy + i * Y.js * 1.9, ma * prog(T, 2.2, 0.5), Y.js, 700));
     }
 
     const SCENES = { C: vizC, R: vizR, O: vizO, P: vizP }, STILL = { C: 4.6, R: 5.5, O: 6.8, P: 5.2 };
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0, cvs = null, t0 = 0, key = null;
-    function size() { const dpr = Math.min(2, window.devicePixelRatio || 1); const cw = cvs.clientWidth || 320, ch = cw * H / W; cvs.width = Math.round(cw * dpr); cvs.height = Math.round(ch * dpr); cvs.style.height = ch + "px"; ctx = cvs.getContext("2d"); ctx.setTransform(cvs.width / W, 0, 0, cvs.height / H, 0, 0); }
+    let raf = 0, cvs = null, t0 = 0, key = null, force = null;
+    function size() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1), cw = cvs.clientWidth || 320;
+      PORTRAIT = force ? force === "p" : cw < 520; H = PORTRAIT ? 800 : 400;
+      const ch = cw * H / W; cvs.width = Math.round(cw * dpr); cvs.height = Math.round(ch * dpr); cvs.style.height = ch + "px";
+      ctx = cvs.getContext("2d"); ctx.setTransform(cvs.width / W, 0, 0, cvs.height / H, 0, 0);
+    }
     function draw(t) { if (!ctx || !key) return; ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H); col(WHITE); ctx.lineCap = "round"; ctx.lineJoin = "round"; SCENES[key](t); ctx.restore(); }
     function frame(now) { draw((now - t0) / 1000); raf = requestAnimationFrame(frame); }
     function start(k) { stop(); key = k; cvs = $("rViz"); size(); if (document.fonts && document.fonts.load) document.fonts.load(FONT(700, 14)).catch(() => {}); if (reduced) { draw(STILL[k]); return; } t0 = performance.now(); raf = requestAnimationFrame(frame); }
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
     window.addEventListener("resize", () => { if (cvs && key) { size(); if (reduced) draw(STILL[key]); } });
     document.addEventListener("visibilitychange", () => { if (!key || reduced) return; if (document.hidden) stop(); else if (!raf) { t0 = performance.now(); raf = requestAnimationFrame(frame); } });
-    return { start, stop, still: (k, t) => { stop(); key = k; cvs = $("rViz"); size(); draw(t); } };
+    return { start, stop, still: (k, t, mode) => { stop(); key = k; cvs = $("rViz"); force = mode || null; size(); draw(t); force = null; } };
   })();
+
 
   // ---- Wiring ----
   $("startBtn").addEventListener("click", () => { track("quiz_start", {}); state.i = 0; renderQ(); show("s-q"); });
