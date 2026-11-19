@@ -280,8 +280,8 @@
       { t: "Physical products", v: "ecom" },
       { t: "Software", v: "saas" },
     ]},
-    { id: "cac", q: "Over the last 90 days, what has your cost per customer done?", help: "Cost per customer, or per qualified call, not cost per lead.", primary: true, opts: [
-      { t: "It goes up every time I add budget", s: { C: 2 } },
+    { id: "cac", q: "What has your cost per customer looked like over the last 90 days?", help: "Cost per customer, or per qualified call, not cost per lead.", primary: true, opts: [
+      { t: "It goes up every time I increase the budget", s: { C: 2 } },
       { t: "It's flat, but the leads keep getting worse", s: { R: 2 } },
       { t: "It was fine until my best ad died", s: { O: 2 } },
       { t: "It's all over the place and I can't tell why", s: { R: 1, C: 1 } },
@@ -293,7 +293,7 @@
       { t: "Five to ten", s: {} },
       { t: "More than ten", s: {} },
     ]},
-    { id: "share", q: "How much of your spend goes to your single best ad?", opts: [
+    { id: "share", q: "How much of your spend goes to your single best-performing ad?", help: "Over the last 30 days. Best by cost per customer, not by spend.", opts: [
       { t: "More than 60%", s: { O: 2 } },
       { t: "30% to 60%", s: { O: 1 } },
       { t: "Under 30%", s: {} },
