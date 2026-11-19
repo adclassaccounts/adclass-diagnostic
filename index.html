@@ -144,7 +144,19 @@
   footer { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: center; font-size: 13px; opacity: 0.85; }
   footer a { text-decoration: none; }
   footer a:hover { text-decoration: underline; }
-  #s-intro { flex: 1; display: flex; flex-direction: column; justify-content: center; padding-bottom: 7vh; }
+  #s-intro { display: flex; flex-direction: column; gap: 56px; }
+  .hero { min-height: calc(100svh - 150px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 18px; padding-bottom: 4vh; position: relative; }
+  .cue { position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-decoration: none; opacity: 0.8; }
+  .cue:hover { opacity: 1; }
+  .teaser { display: flex; flex-direction: column; gap: 18px; align-items: center; text-align: center; scroll-margin-top: 24px; padding-bottom: 24px; }
+  .teaser .eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.85; }
+  .tgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: 100%; margin: 10px 0 14px; }
+  .tcard { background: var(--navy); color: #fff; border-radius: 18px; overflow: hidden; text-align: left; box-shadow: 0 14px 34px rgba(0, 0, 0, 0.18); }
+  .tcard canvas { display: block; width: 100%; }
+  .tcard .tc { padding: 12px 16px 16px; }
+  .tcard h3 { font-size: 18px; margin: 0 0 4px; }
+  .tcard p { font-size: 14px; opacity: 0.8; line-height: 1.4; }
+  @media (max-width: 560px) { .tgrid { grid-template-columns: 1fr; } }
   .screen[hidden] { display: none !important; }
   .fade { animation: fade 0.25s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
@@ -160,11 +172,27 @@
 
   <!-- Intro -->
   <section class="screen fade" id="s-intro">
-    <div style="display:flex;flex-direction:column;gap:18px;align-items:center;text-align:center">
+    <div class="hero">
       <h1>Find out why your <span class="pill">Meta ads</span> stopped scaling</h1>
       <p class="lead">Nine questions, two minutes. You get the pattern your account is stuck in, the mechanism behind it, and the fix in order, from the team that runs about six million dollars a month on Meta.</p>
       <div class="row" style="justify-content:center">
         <button class="btn primary" id="startBtn" type="button">Start the diagnostic</button>
+      </div>
+      <a class="cue" href="#patterns">See the four patterns <span aria-hidden="true">&darr;</span></a>
+    </div>
+    <!-- Teaser: the four result panels, animating, so the fold shows what the result looks like -->
+    <div class="teaser" id="patterns">
+      <p class="eyebrow">What you get</p>
+      <h2>Every stuck account is one of four patterns.</h2>
+      <p class="lead">Your result names yours, shows the mechanism behind it, and gives you the fix in order.</p>
+      <div class="tgrid">
+        <div class="tcard"><canvas data-k="C" data-off="0" width="640" height="400"></canvas><div class="tc"><h3>The ceiling account</h3><p>Works at one budget and falls apart above it.</p></div></div>
+        <div class="tcard"><canvas data-k="R" data-off="2.7" width="640" height="400"></canvas><div class="tc"><h3>The slow rot</h3><p>The numbers look fine and sales keep getting worse.</p></div></div>
+        <div class="tcard"><canvas data-k="O" data-off="4.9" width="640" height="400"></canvas><div class="tc"><h3>The one-ad account</h3><p>One ad carries everything, and every ad dies.</p></div></div>
+        <div class="tcard"><canvas data-k="P" data-off="1.6" width="640" height="400"></canvas><div class="tc"><h3>Starting from zero</h3><p>No spend yet, so you get to build it right.</p></div></div>
+      </div>
+      <div class="row" style="justify-content:center">
+        <button class="btn primary" id="startBtn2" type="button">Find your pattern</button>
       </div>
     </div>
   </section>
@@ -710,26 +738,62 @@
 
     const SCENES = { C: vizC, R: vizR, O: vizO, P: vizP }, STILL = { C: 4.6, R: 5.5, O: 6.8, P: 5.2 };
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let raf = 0, cvs = null, t0 = 0, key = null, force = null;
-    function size() {
-      const dpr = Math.min(2, window.devicePixelRatio || 1), cw = cvs.clientWidth || 320;
-      PORTRAIT = force ? force === "p" : cw < 520; H = PORTRAIT ? 800 : 400;
-      const ch = cw * H / W; cvs.width = Math.round(cw * dpr); cvs.height = Math.round(ch * dpr); cvs.style.height = ch + "px";
-      ctx = cvs.getContext("2d"); ctx.setTransform(cvs.width / W, 0, 0, cvs.height / H, 0, 0);
+    // One engine, several canvases: the result panel (auto layout) and the intro teaser (always landscape).
+    function setup(c, mode) {
+      const dpr = Math.min(2, window.devicePixelRatio || 1), cw = c.clientWidth || 320;
+      const portrait = mode ? mode === "p" : cw < 520, h = portrait ? 800 : 400, ch = cw * h / W;
+      const bw = Math.round(cw * dpr), bh = Math.round(ch * dpr);
+      if (c.width !== bw || c.height !== bh) { c.width = bw; c.height = bh; }
+      c.style.height = ch + "px";
+      return { c, portrait, h };
     }
-    function draw(t) { if (!ctx || !key) return; ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H); col(WHITE); ctx.lineCap = "round"; ctx.lineJoin = "round"; SCENES[key](t); ctx.restore(); }
-    function frame(now) { draw((now - t0) / 1000); raf = requestAnimationFrame(frame); }
-    function start(k) { stop(); key = k; cvs = $("rViz"); size(); if (document.fonts && document.fonts.load) document.fonts.load(FONT(700, 14)).catch(() => {}); if (reduced) { draw(STILL[k]); return; } t0 = performance.now(); raf = requestAnimationFrame(frame); }
+    function paint(it, k, t) {
+      const c = it.c; ctx = c.getContext("2d"); PORTRAIT = it.portrait; H = it.h;
+      ctx.setTransform(c.width / W, 0, 0, c.height / H, 0, 0);
+      ctx.save(); ctx.globalAlpha = 1; ctx.fillStyle = NAVY; ctx.fillRect(0, 0, W, H); col(WHITE); ctx.lineCap = "round"; ctx.lineJoin = "round"; SCENES[k](t); ctx.restore();
+    }
+    const loadFont = () => { if (document.fonts && document.fonts.load) document.fonts.load(FONT(700, 14)).catch(() => {}); };
+    // result panel
+    let raf = 0, main = null, key = null, t0 = 0;
+    function frame(now) { paint(main, key, (now - t0) / 1000); raf = requestAnimationFrame(frame); }
+    function start(k) { stop(); key = k; main = setup($("rViz")); loadFont(); if (reduced) { paint(main, k, STILL[k]); return; } t0 = performance.now(); raf = requestAnimationFrame(frame); }
     function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
-    window.addEventListener("resize", () => { if (cvs && key) { size(); if (reduced) draw(STILL[key]); } });
-    document.addEventListener("visibilitychange", () => { if (!key || reduced) return; if (document.hidden) stop(); else if (!raf) { t0 = performance.now(); raf = requestAnimationFrame(frame); } });
-    return { start, stop, still: (k, t, mode) => { stop(); key = k; cvs = $("rViz"); force = mode || null; size(); draw(t); force = null; } };
+    // teaser: the four small panels on the intro, one loop, running only while on screen
+    let tz = [], traf = 0, tt0 = 0, tio = null;
+    function tframe(now) { const t = (now - tt0) / 1000; tz.forEach((it) => paint(it, it.k, t + it.off)); traf = requestAnimationFrame(tframe); }
+    function teaserRun() { if (traf || reduced || document.hidden || !tz.some((it) => it.vis)) return; tt0 = performance.now(); traf = requestAnimationFrame(tframe); }
+    function teaserStop() { if (traf) cancelAnimationFrame(traf); traf = 0; }
+    function teaser(canvases) {
+      teaserStop(); if (tio) tio.disconnect();
+      tz = [...canvases].map((c) => Object.assign(setup(c, "l"), { k: c.dataset.k, off: +c.dataset.off || 0, vis: false }));
+      loadFont();
+      tz.forEach((it) => paint(it, it.k, STILL[it.k])); // a still frame first, so nothing is blank before the loop starts
+      if (reduced) return;
+      if ("IntersectionObserver" in window) {
+        tio = tio || new IntersectionObserver((es) => { es.forEach((e) => { const it = tz.find((x) => x.c === e.target); if (it) it.vis = e.isIntersecting; }); tz.some((it) => it.vis) ? teaserRun() : teaserStop(); }, { threshold: 0.05 });
+        tz.forEach((it) => tio.observe(it.c));
+      } else { tz.forEach((it) => { it.vis = true; }); teaserRun(); }
+    }
+    function teaserOff() { teaserStop(); if (tio) tio.disconnect(); tz = []; }
+    window.addEventListener("resize", () => {
+      if (main && key) { main = setup($("rViz")); if (reduced) paint(main, key, STILL[key]); }
+      tz.forEach((it) => { Object.assign(it, setup(it.c, "l")); if (reduced || !traf) paint(it, it.k, STILL[it.k]); });
+    });
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) { stop(); teaserStop(); return; }
+      if (key && !raf && !reduced) { t0 = performance.now(); raf = requestAnimationFrame(frame); }
+      teaserRun();
+    });
+    return { start, stop, teaser, teaserOff, still: (k, t, mode) => { stop(); key = k; main = setup($("rViz"), mode || null); paint(main, k, t); } };
   })();
 
 
   // ---- Wiring ----
-  $("startBtn").addEventListener("click", () => { track("quiz_start", {}); state.i = 0; renderQ(); show("s-q"); });
+  const startQuiz = () => { track("quiz_start", {}); VIZ.teaserOff(); state.i = 0; renderQ(); show("s-q"); };
+  $("startBtn").addEventListener("click", startQuiz);
+  $("startBtn2").addEventListener("click", startQuiz);
+  VIZ.teaser(document.querySelectorAll(".tcard canvas"));
   $("backBtn").addEventListener("click", () => { if (state.i > 0) { state.i--; renderQ(); } });
   $("gateBack").addEventListener("click", () => { state.i = QUESTIONS.length - 1; renderQ(); show("s-q"); });
-  $("restart").addEventListener("click", () => { VIZ.stop(); state.i = 0; state.answers = {}; state.result = null; $("stepLabel").textContent = "2-minute diagnostic"; show("s-intro"); });
+  $("restart").addEventListener("click", () => { VIZ.stop(); state.i = 0; state.answers = {}; state.result = null; $("stepLabel").textContent = "2-minute diagnostic"; show("s-intro"); VIZ.teaser(document.querySelectorAll(".tcard canvas")); });
 </script>
