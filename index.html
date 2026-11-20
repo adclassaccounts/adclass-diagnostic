@@ -107,7 +107,7 @@
   .back:hover { color: var(--ink); }
 
   label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600; color: var(--ink-soft); }
-  input[type="text"], input[type="email"] { font: 500 17px var(--body); color: var(--ink); background: var(--paper-tint); border: 2px solid transparent; border-radius: 12px; padding: 13px 14px; width: 100%; }
+  input[type="text"], input[type="email"], input[type="tel"] { font: 500 17px var(--body); color: var(--ink); background: var(--paper-tint); border: 2px solid transparent; border-radius: 12px; padding: 13px 14px; width: 100%; }
   input:focus { outline: none; border-color: var(--green); background: #fff; }
   .err { color: var(--coral-deep); font-size: 14px; font-weight: 500; min-height: 1.2em; }
 
@@ -239,6 +239,7 @@
         <div style="display:flex;flex-direction:column;gap:12px">
           <label>First name<input type="text" id="firstName" name="firstName" autocomplete="given-name" placeholder="Dakota" /></label>
           <label>Email<input type="email" id="email" name="email" autocomplete="email" placeholder="you@company.com" /></label>
+          <label id="phoneWrap" hidden>Phone (optional)<input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+1 555 123 4567" /><span class="muted fine" style="display:block;margin-top:6px">If you want, we'll text you the breakdown.</span></label>
           <div class="err" id="gateErr"></div>
           <button class="btn primary wide" type="submit" id="gateBtn">Show my result</button>
           <p class="muted fine">Your result by email, then a few short follow-ups on the fix. Unsubscribe any time.</p>
@@ -559,7 +560,7 @@
     setTimeout(() => {
       picking = false;
       if (state.i < active().length - 1) { state.i++; renderQ(); }
-      else { $("qCard").classList.remove("out"); score(); $("stepLabel").textContent = "Almost there"; show("s-gate"); setTimeout(() => $("firstName").focus(), 300); }
+      else { $("qCard").classList.remove("out"); score(); $("phoneWrap").hidden = !["call", "local"].includes(routeFor().kind); $("stepLabel").textContent = "Almost there"; show("s-gate"); setTimeout(() => $("firstName").focus(), 300); }
     }, T[2]);
   }
   function score() {
@@ -589,15 +590,17 @@
     e.preventDefault();
     const name = $("firstName").value.trim();
     const email = $("email").value.trim();
+    const phone = $("phoneWrap").hidden ? "" : $("phone").value.trim();
     if (!name) { $("gateErr").textContent = "Add your first name so the email isn't addressed to nobody."; $("firstName").focus(); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { $("gateErr").textContent = "That email doesn't look right. Check it and try again."; $("email").focus(); return; }
+    if (phone && phone.replace(/\D/g, "").length < 7) { $("gateErr").textContent = "That phone number looks short. Add the area code, or leave it blank."; $("phone").focus(); return; }
     $("gateErr").textContent = "";
     $("gateBtn").disabled = true; $("gateBtn").textContent = "One second…";
     // Flat keys so GoHighLevel's inbound-webhook mapper can pick each one as a contact or custom field.
     const text = (id) => optOf(id)?.t ?? "";
     const ecn = econ();
     const payload = {
-      first_name: name, email,
+      first_name: name, email, phone,
       quiz_result: RESULTS[state.result].title, quiz_result_key: state.result, quiz_route: routeFor().kind,
       ad_spend_band: text("spend"), ad_spend: answerValue("spend"),
       revenue_band: text("revenue"), revenue: answerValue("revenue"),
