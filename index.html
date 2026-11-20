@@ -195,10 +195,10 @@
     <!-- Teaser: the four result panels, animating, so the fold shows what the result looks like -->
     <div class="teaser" id="patterns">
       <p class="eyebrow">What you get</p>
-      <h2>Every stuck account is one of five patterns.</h2>
+      <h2>Every stuck account is 1 of 5 patterns.</h2>
       <p class="lead">Let's find where yours is stuck.</p>
       <div class="car">
-        <div class="track" id="track" aria-label="The four patterns">
+        <div class="track" id="track" aria-label="The 5 patterns">
           <div class="tcard"><canvas data-k="C" data-off="1.2" width="640" height="400"></canvas><div class="tc"><h3>The ceiling account</h3><p>Works at one budget and falls apart above it.</p></div></div>
           <div class="tcard"><canvas data-k="R" data-off="2.7" width="640" height="400"></canvas><div class="tc"><h3>The slow rot</h3><p>The numbers look fine and sales keep getting worse.</p></div></div>
           <div class="tcard"><canvas data-k="O" data-off="4.9" width="640" height="400"></canvas><div class="tc"><h3>The one-ad account</h3><p>One ad carries everything, and every ad dies.</p></div></div>
@@ -234,7 +234,7 @@
     <div class="progress" style="margin-bottom:14px"><i style="width:100%"></i></div>
     <div class="card fade">
       <h2>Your result is ready.</h2>
-      <p class="muted">Tell us where to send the full breakdown and the three fixes in order, and we'll show it to you right now.</p>
+      <p class="muted">Tell us where to send the full breakdown and the 3 fixes in order, and we'll show it to you right now.</p>
       <form id="leadForm" novalidate>
         <div style="display:flex;flex-direction:column;gap:12px">
           <label>First name<input type="text" id="firstName" name="firstName" autocomplete="given-name" placeholder="Dakota" /></label>
@@ -308,7 +308,7 @@
       { t: "$100,000 to $500,000", v: 250000 },
       { t: "Over $500,000", v: 750000 },
     ]},
-    { id: "revenue", q: "What does the business bring in per month?", help: "Revenue, not profit. A rough number is fine.", opts: [
+    { id: "revenue", q: "What is your monthly recurring revenue?", help: "Important: revenue, not profit.", opts: [
       { t: "Under $25,000", v: 10000 },
       { t: "$25,000 to $100,000", v: 50000 },
       { t: "$100,000 to $500,000", v: 250000 },
@@ -340,8 +340,8 @@
       info:    { q: "Is there anything to buy after it?", opts: [["Nothing yet", 1], ["A one-time upsell", 1.5], ["A monthly membership or continuity", 2], ["A high-ticket backend", 3]] },
       service: { q: "How long does a typical client stay?", opts: [["Under 3 months", 2], ["3 to 6 months", 4.5], ["6 to 12 months", 9], ["Over a year", 18]] },
       local:   { q: "Do customers come back?", opts: [["Usually once", 1], ["Every few years", 1.5], ["Every year", 3], ["On a maintenance plan", 5]] },
-      ecom:    { q: "How many times does a customer order in a year?", opts: [["Once", 1], ["Two or three", 2.5], ["Four to six", 5], ["Seven or more, or it's a subscription", 12]] },
-      saas:    { q: "How long does an account stay?", opts: [["Under 6 months", 3], ["6 to 12 months", 9], ["One to two years", 18], ["Over two years", 36]] },
+      ecom:    { q: "How many times does a customer order in a year?", opts: [["Once", 1], ["2 or 3", 2.5], ["4 to 6", 5], ["7 or more, or it's a subscription", 12]] },
+      saas:    { q: "How long does an account stay?", opts: [["Under 6 months", 3], ["6 to 12 months", 9], ["1 to 2 years", 18], ["Over 2 years", 36]] },
     }},
     { id: "cacBand", econ: true, when: () => (answerValue("spend") || 0) > 0, variants: {
       info:    { q: "What does a buyer cost you from ads right now?", help: "Cost per customer, not per lead.", opts: [["Under $200", 100], ["$200 to $1,000", 600], ["$1,000 to $3,000", 2000], ["$3,000 to $8,000", 5500], ["Over $8,000", 12000], ["I don't know", null]] },
@@ -358,10 +358,10 @@
       { t: "I only track cost per lead", s: { R: 2 } },
     ]},
     { id: "angles", q: "How many new ad concepts do you launch in a month?", help: "New angles, meaning new reasons to buy. New edits of the same ad don't count.", opts: [
-      { t: "Zero or one", s: { C: 2, O: 1 } },
-      { t: "Two to four", s: { C: 1 } },
-      { t: "Five to ten", s: {} },
-      { t: "More than ten", s: {} },
+      { t: "0 or 1", s: { C: 2, O: 1 } },
+      { t: "2 to 4", s: { C: 1 } },
+      { t: "5 to 10", s: {} },
+      { t: "More than 10", s: {} },
     ]},
     { id: "share", q: "How much of your spend goes to your single best-performing ad?", help: "Over the last 30 days. Best by cost per customer, not by spend.", opts: [
       { t: "More than 60%", s: { O: 2 } },
@@ -372,7 +372,7 @@
     { id: "judge", q: "How do you decide a new ad is a loser?", opts: [
       { t: "Click-through rate or hook rate in the first few days", s: { R: 2 } },
       { t: "Cost per lead against my target, after a few days", s: { R: 1, C: 1 } },
-      { t: "Cost per customer, after it spends two to three times my target", s: {} },
+      { t: "Cost per customer, after it spends 2 to 3 times my target", s: {} },
       { t: "Gut feel, or when someone complains", s: { C: 1 } },
     ]},
     { id: "event", q: "What is Meta optimizing for in your main campaign?", opts: [
@@ -380,12 +380,20 @@
       { t: "Leads, like a form fill", s: { R: 1 } },
       { t: "Clicks, landing page views or engagement", s: { R: 2 } },
       { t: "I'm not sure", s: { R: 2 } },
-    ]},
+    ], variants: { // info brands rarely optimize for a purchase; a booked call or an application is their money event
+      info: { q: "What is Meta optimizing for in your main campaign?", opts: [
+        { t: "Purchases", s: {} },
+        { t: "Booked calls, applications or qualified leads", s: {} },
+        { t: "Leads, like an opt-in or a form fill", s: { R: 1 } },
+        { t: "Clicks, landing page views or engagement", s: { R: 2 } },
+        { t: "I'm not sure", s: { R: 2 } },
+      ]},
+    }},
   ];
 
-  QUESTIONS.forEach((q) => { if (q.variants) Object.values(q.variants).forEach((v) => { v.opts = v.opts.map(([t, n, kind]) => ({ t, v: n, kind })); }); });
+  QUESTIONS.forEach((q) => { if (q.variants) Object.values(q.variants).forEach((v) => { v.opts = v.opts.map((o) => (Array.isArray(o) ? { t: o[0], v: o[1], kind: o[2] } : o)); }); });
   // The question shown for an id: the variant for what they sell, or the question itself.
-  const qdef = (q) => (q.variants ? (q.variants[answerValue("sell")] || q.variants.info) : q);
+  const qdef = (q) => (q.variants && q.variants[answerValue("sell")]) || (q.variants && !q.opts ? q.variants.info : q);
   const active = () => QUESTIONS.filter((q) => !q.when || q.when());
   function optOf(id) { const q = QUESTIONS.find((x) => x.id === id); if (!q) return null; const d = qdef(q); return d.opts[state.answers[id]] || null; }
   const VERT = { info: "info products", service: "services", local: "home services", ecom: "e-commerce", saas: "software" };
@@ -411,7 +419,8 @@
     return { sells, value, cac, ratio, bucket, payback, monthly, floor, unknown, zeroCheck };
   }
   const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
-  const ratioText = (e) => "$" + e.ratio.toFixed(2); // what a dollar of ad spend brings back
+  const ratioText = (e) => "$" + e.ratio.toFixed(2); // what $1 of ad spend brings back
+  const ratioLabel = (e) => (Math.round(e.ratio * 10) / 10) + ":1"; // LTV to CAC
 
   const REEL = {
     scaleWall:  { t: "How to break past the scale wall", u: "https://www.instagram.com/reel/DfVW3--PoZ1/" },
@@ -436,8 +445,8 @@
       line: "Your account works at one budget and falls apart above it.",
       mech: "Every ad finds a pocket of people who respond to it. Your current ads have found their pockets and bought most of the people in them. When you add budget, Meta has to buy people outside those pockets, and they cost more, so your cost per customer climbs and you pull the budget back down.",
       fixes: [
-        ["Launch new angles.", "Ten or more new concepts in the next 30 days, each aimed at a different reason to buy. New edits of the same ad don’t count, because each angle opens a new pocket and an edit opens none."],
-        ["Give every test a fair shot.", "Judge an ad on cost per customer after it spends two to three times your target, in its own ad set."],
+        ["Launch new angles.", "10 or more new concepts in the next 30 days, each aimed at a different reason to buy. New edits of the same ad don’t count, because each angle opens a new pocket and an edit opens none."],
+        ["Give every test a fair shot.", "Judge an ad on cost per customer after it spends 2 to 3 times your target, in its own ad set."],
         ["Climb the ladder in order.", "New angles first, then a funnel built for colder traffic, then a new platform."],
       ],
       reels: ["scaleWall", "angles", "anatomy", "three"],
@@ -447,9 +456,9 @@
       line: "Your numbers look fine and your sales keep getting worse.",
       mech: "Meta finds more of whoever your optimization event rewards. When that event is a click, a view or a cheap lead, Meta gets very good at finding clickers and cheap leads. The ads with the best-looking metrics are teaching it to find the wrong people, and the pixel is starved of the one signal that matters, which is a sale.",
       fixes: [
-        ["Optimize for the event closest to money.", "Purchases or qualified calls when they fire about fifty times a week. When they don't, build a qualified-lead event that does."],
+        ["Optimize for the event closest to money.", "Purchases or qualified calls when they fire about 50 times a week. When they don't, build a qualified-lead event that does."],
         ["Judge ads on cost per customer.", "Click-through rate, hook rate and cost per lead tell you who clicked. They don't tell you who bought."],
-        ["Change one thing, then hold for 14 days.", "Every pixel change retrains Meta, so change the event, leave it alone for two weeks, and judge it after."],
+        ["Change one thing, then hold for 14 days.", "Every pixel change retrains Meta, so change the event, leave it alone for 2 weeks, and judge it after."],
       ],
       reels: ["vanity", "cheap", "hooks", "landing"],
     },
@@ -458,8 +467,8 @@
       line: "One ad is carrying your whole account, and every ad dies.",
       mech: "An ad fatigues because the pocket it speaks to runs out of people. When most of your spend sits on one winner, its decline is your account's decline, and nothing in the pipeline is ready to take over. You need a bench of winners before this one fades.",
       fixes: [
-        ["Multiply the winner's angle.", "Five versions in different formats: talking head, text on screen, a static, a demo, a story. Same reason to buy, different ways to say it."],
-        ["Run a standing testing campaign.", "Three to eight ads per ad set in ABO, with new concepts every week, so a replacement is always warming up."],
+        ["Multiply the winner's angle.", "5 versions in different formats: talking head, text on screen, a static, a demo, a story. Same reason to buy, different ways to say it."],
+        ["Run a standing testing campaign.", "3 to 8 ads per ad set in ABO, with new concepts every week, so a replacement is always warming up."],
         ["Watch the spend on one ad.", "When most of the budget sits on one ad, launch the next batch now, not when it dies."],
       ],
       reels: ["fatigue", "anatomy", "aboCbo", "minimums"],
@@ -467,22 +476,22 @@
     P: {
       eyebrow: "Pattern 4 of 5", title: "Starting from zero",
       line: "You haven't spent a dollar yet, which means you get to build it right.",
-      mech: "Most accounts get stuck because of three decisions made in the first month: optimizing for the wrong event, launching one ad instead of a batch, and sending cold traffic to a page built for warm traffic. You can skip all three.",
+      mech: "Most accounts get stuck because of 3 decisions made in the first month: optimizing for the wrong event, launching one ad instead of a batch, and sending cold traffic to a page built for warm traffic. You can skip all 3.",
       fixes: [
         ["Optimize for the event closest to money.", "A purchase or a qualified call, with the pixel wired up before the first ad runs."],
-        ["Launch five to ten angles.", "Each in its own ad set, each a different reason to buy, so you learn which pocket is yours. One ad teaches you nothing."],
-        ["Judge at two to three times your target cost.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
+        ["Launch 5 to 10 angles.", "Each in its own ad set, each a different reason to buy, so you learn which pocket is yours. One ad teaches you nothing."],
+        ["Judge at 2 to 3 times your target cost.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
       ],
       reels: ["aboCbo", "angles", "andromeda", "cpm"],
     },
     X: {
       eyebrow: "Pattern 5 of 5", title: "The offer problem",
       line: "Your ads are working. The math behind them isn't.",
-      mech: (e) => `For every dollar you spend to get a customer, you get about ${ratioText(e)} back over the time they stay with you. One to three is strong, meaning every dollar comes back three times. You're under one to two. At that number the ads can be perfect and you still can't afford the customers they bring in, and every new customer costs a little more as you spend more, so the gap only widens. More angles, a better optimization event or new creative won't change it, because the problem sits after the click: what a customer pays you, and how many times.`,
+      mech: (e) => `For every $1 you spend to get a customer, you get about ${ratioText(e)} back over the time they stay with you. That is an LTV to CAC ratio of ${ratioLabel(e)}. 3:1 is strong, meaning every $1 comes back as $3. You're under 2:1. At that number the ads can be perfect and you still can't afford the customers they bring in, and every new customer costs a little more as you spend more, so the gap only widens. More angles, a better optimization event or new creative won't change it, because the problem sits after the click: what a customer pays you, and how many times.`,
       fixes: [
-        ["Give them more to buy.", "If your customers buy once and never again, the fastest lever is after the first sale: an upsell, a bigger package, or something they pay for every month. A customer who keeps paying in month two and month twelve is what lets a business pay more for a customer up front."],
-        ["Then check the price and the margin.", "If there's nothing to add after the sale, you need profit on the first purchase. Raise the price or cut what it costs to deliver until a customer is worth at least twice what they cost."],
-        ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth three times what they cost, every fix on the other four pages starts paying. Until then, hold the spend where it is."],
+        ["Give them more to buy.", "If your customers buy once and never again, the fastest lever is after the first sale: an upsell, a bigger package, or something they pay for every month. A customer who keeps paying in month 2 and month 12 is what lets a business pay more for a customer up front."],
+        ["Then check the price and the margin.", "If there's nothing to add after the sale, you need profit on the first purchase. Raise the price or cut what it costs to deliver until a customer is worth at least 2x what they cost."],
+        ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth 3x what they cost, every fix on the other 4 pages starts paying. Until then, hold the spend where it is."],
       ],
       reels: ["outspend", "cheap", "vanity", "scaleWall"],
     },
@@ -558,7 +567,7 @@
     let pre = false, primary = null;
     QUESTIONS.forEach((q) => {
       if (q.econ) return;
-      const o = q.opts[state.answers[q.id]];
+      const o = qdef(q).opts[state.answers[q.id]];
       if (!o) return;
       if (o.pre) pre = true;
       if (o.s) for (const k in o.s) s[k] += o.s[k];
@@ -624,9 +633,9 @@
     if (sells === "local" && revenue >= CONFIG.localRevenue && CONFIG.localUrl) return { kind: "local", title: "Home-service businesses your size are what Local Legend does.", body: "Local Legend is our home-service practice, and the fixes above are the same ones we run for them. Book a call and we’ll go through your market together: the pattern above, what the numbers look like for a business your size, and whether it makes sense for us to run it. You leave with the plan either way.", btn: "Book a call with Local Legend", url: tag(CONFIG.localUrl, "local"), alt: `If a call is too early, <a href="${tag(CONFIG.skoolUrl, "local-alt")}" target="_blank" rel="noopener">join the free Skool group</a> and start with the fixes above.`,
       consult: CONFIG.consultUrl ? `For a one-off working session on the account instead, ${consultLink("local-consult", "book a consulting call with Dakota")}.` : "" };
     const noAds = spend === 0 && revenue >= CONFIG.callRevenue;
-    if (spend >= CONFIG.callSpend || revenue >= CONFIG.callRevenue) return { kind: "call", title: noAds ? "You have the revenue. The ads are the missing channel." : "Accounts your size are what we do.", body: noAds ? "Businesses doing your numbers without paid traffic are often the best fit we see, because the offer is already proven and the market already buys it. Book a call and we’ll map what the first ninety days on Meta would look like for you, and whether it makes sense for us to run it." : "Book a call and we’ll go through your account together on it: the pattern above, the numbers behind it, and whether it makes sense for us to run it. It’s a working session, and you’ll leave with the plan either way.", btn: "Book a call with AdClass", url: tag(CONFIG.callUrl, "call"), alt: `If a call is too early, <a href="${tag(CONFIG.skoolUrl, "call-alt")}" target="_blank" rel="noopener">join the free Skool group</a> and start with the fixes above.`,
+    if (spend >= CONFIG.callSpend || revenue >= CONFIG.callRevenue) return { kind: "call", title: noAds ? "You have the revenue. The ads are the missing channel." : "Accounts your size are what we do.", body: noAds ? "Businesses doing your numbers without paid traffic are often the best fit we see, because the offer is already proven and the market already buys it. Book a call and we’ll map what the first 90 days on Meta would look like for you, and whether it makes sense for us to run it." : "Book a call and we’ll go through your account together on it: the pattern above, the numbers behind it, and whether it makes sense for us to run it. It’s a working session, and you’ll leave with the plan either way.", btn: "Book a call with AdClass", url: tag(CONFIG.callUrl, "call"), alt: `If a call is too early, <a href="${tag(CONFIG.skoolUrl, "call-alt")}" target="_blank" rel="noopener">join the free Skool group</a> and start with the fixes above.`,
       consult: CONFIG.consultUrl ? `For a one-off working session on the account instead, ${consultLink("call-consult", "book a consulting call with Dakota")}.` : "" };
-    return { kind: "skool", title: "Start with the free Skool group.", body: "Everything in the fixes above is taught in there in full, with the templates, the Claude skills behind the reels, and a place to ask about your account. When you pass thirty thousand a month in spend, we can talk about running it for you.", btn: "Join the free Skool group", url: tag(CONFIG.skoolUrl, "skool"), alt: "",
+    return { kind: "skool", title: "Start with the free Skool group.", body: "Everything in the fixes above is taught in there in full, with the templates, the Claude skills behind the reels, and a place to ask about your account. When you pass $30,000 a month in spend, we can talk about running it for you.", btn: "Join the free Skool group", url: tag(CONFIG.skoolUrl, "skool"), alt: "",
       consult: CONFIG.consultUrl ? `If you want eyes on your account sooner, ${consultLink("skool-consult", "book a one-off consulting call with Dakota")}.` : "" };
   }
   function renderResult() {
@@ -639,9 +648,9 @@
     $("rMech").textContent = typeof r.mech === "function" ? r.mech(e) : r.mech;
     const notes = [];
     if (state.result !== "X") {
-      if (e.bucket === "warn") notes.push(`Your numbers work, barely. For every dollar you spend to get a customer you get about ${ratioText(e)} back. The fixes below bring the cost of a customer down, and that helps. The value side has to move too: something to buy after the first sale, or a price change. Accounts at this ratio get to one to three by doing both at once.`);
-      if (e.unknown && e.bucket !== "na") notes.push(`You answered "I don't know" for what a customer costs or what one is worth. Everything on this page depends on those two numbers. Finding them is the first fix, before any of the ones below.`);
-      if (e.zeroCheck) notes.push(`One thing before the first ad. At about ${money(e.value)} per customer, your ads have to buy a customer for under ${money(e.value / 3)} to make sense, and in ${VERT[e.sells] || "your market"} that's a hard number to hit. Build the backend or raise the price first, then launch.`);
+      if (e.bucket === "warn") notes.push(`Your numbers work, barely. For every $1 you spend to get a customer you get about ${ratioText(e)} back, an LTV to CAC ratio of ${ratioLabel(e)}. The fixes below bring the cost of a customer down, and that helps. The value side has to move too: something to buy after the first sale, or a price change. Accounts at this ratio get to 3:1 by doing both at once.`);
+      if (e.unknown && e.bucket !== "na") notes.push(`You answered "I don't know" for what a customer costs or what one is worth. Everything on this page depends on those 2 numbers. Finding them is the first fix, before any of the ones below.`);
+      if (e.zeroCheck) notes.push(`One thing before the first ad. At about ${money(e.value)} per customer, your ads have to buy a customer for under ${money(e.value / 3)} (a third of that) to make sense, and in ${VERT[e.sells] || "your market"} that's a hard number to hit. Build the backend or raise the price first, then launch.`);
       if (e.payback != null && e.payback > 12) notes.push(`At ${money(e.cac)} against ${money(e.monthly)} a month, you wait about ${Math.round(e.payback)} months to get the ad spend back. The offer works, but you're funding every customer for a year. An annual plan, a setup fee or a front-end product shortens that, and it's worth fixing before the budget goes up.`);
       else if (e.payback != null && e.payback >= 6) notes.push(`You get the ad spend back in about ${Math.round(e.payback)} months. Budget for that gap before you scale, because every new customer is a loan you make to yourself.`);
     }
@@ -774,7 +783,7 @@
         rrect(bx0, by + 22, 10, 10, 2, s * B, 2, true); label("Budget", bx0 + 16, by + 27, s * B, 12, 700, "left");
         rrect(bx0 + 95, by + 22, 10, 10, 2, s * B * 0.8, 2, false); label("Cost per customer", bx0 + 111, by + 27, s * B, 12, 700, "left");
       }
-      if (Cc > 0.004) label("Ten new angles open ten new pockets.", Y.lx, Y.ly, s * Cc * 0.85, 13, 700, Y.la);
+      if (Cc > 0.004) label("10 new angles open 10 new pockets.", Y.lx, Y.ly, s * Cc * 0.85, 13, 700, Y.la);
     }
 
     // R: the dashboard looks fine while sales sink.
@@ -852,8 +861,8 @@
     function vizP(t) {
       const L = 8.5, T = t % L, s = win(T, 0, L, 0.4, 0.5);
       const Y = PORTRAIT
-        ? { y: 200, w: 104, h: 120, title: ["Launch five to ten angles,", "each in its own ad set"], ty: 66, pillY: 158, flow0: 172, my: 545, judge: ["Judge every ad only after it", "spends 2–3× your target cost"], jy: 672, js: 15 }
-        : { y: 95, w: 100, h: 90, title: ["Launch five to ten angles, each in its own ad set"], ty: 28, pillY: 62, flow0: 75, my: 300, judge: ["Judge every ad only after it spends 2–3× your target cost"], jy: 372, js: 13 };
+        ? { y: 200, w: 104, h: 120, title: ["Launch 5 to 10 angles,", "each in its own ad set"], ty: 66, pillY: 158, flow0: 172, my: 545, judge: ["Judge every ad only after it", "spends 2–3× your target cost"], jy: 672, js: 15 }
+        : { y: 95, w: 100, h: 90, title: ["Launch 5 to 10 angles, each in its own ad set"], ty: 28, pillY: 62, flow0: 75, my: 300, judge: ["Judge every ad only after it spends 2–3× your target cost"], jy: 372, js: 13 };
       const XS = [70, 195, 320, 445, 570], { y, w, h } = Y, winI = 2;
       const found = prog(T, 3.6, 0.5);
       col(WHITE); Y.title.forEach((l, i) => label(l, 320, Y.ty + i * 24, s * prog(T, 0.2, 0.4), 14, 700));
@@ -901,9 +910,9 @@
       headline(["Your ads are working.", "The math isn't."], Y.hx, Y.hy, s * A, WHITE, 21, Y.ha);
       headline(["Costs climb", "as you spend more."], Y.hx, Y.hy, s * B, CORAL, 21, Y.ha);
       headline(["Give them", "more to buy."], Y.hx, Y.hy, s * Cc, GREEN, 21, Y.ha);
-      pill(Y.px, Y.py, "One to 1.3", s * A, 0, 12);
+      pill(Y.px, Y.py, "1.3:1", s * A, 0, 12);
       pill(Y.px, Y.py, "Costs more than it's worth", s * B, 0, 12, CORAL);
-      pill(Y.px, Y.py, "One to three", s * Cc, 1, 12, GREEN);
+      pill(Y.px, Y.py, "3:1", s * Cc, 1, 12, GREEN);
       if (B > 0.004) { col(CORAL); xMark(Y.bx, Y.base - cost - 18, 8, prog(T, 4.6, 0.4), s * B, 2.5); }
       col(GREEN); burst(Y.wx, Y.base - worthBase - 170 * U, t, Math.floor(t / L) * L + 8.4, 20, 90, 0.7, s);
     }
