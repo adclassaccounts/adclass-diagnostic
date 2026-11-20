@@ -112,6 +112,8 @@
   .err { color: var(--coral-deep); font-size: 14px; font-weight: 500; min-height: 1.2em; }
 
   .result-card { border: 3px solid var(--navy); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 16px; position: relative; }
+  .econ { background: var(--paper-tint); border-left: 4px solid var(--coral); border-radius: 10px; padding: 12px 14px; font-size: 15px; color: var(--ink); display: flex; flex-direction: column; gap: 8px; }
+  .econ[hidden] { display: none; }
   .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green-deep); }
   .mech { color: var(--ink-soft); }
   .viz { background: var(--navy); overflow: hidden; margin: 2px -22px; }
@@ -193,7 +195,7 @@
     <!-- Teaser: the four result panels, animating, so the fold shows what the result looks like -->
     <div class="teaser" id="patterns">
       <p class="eyebrow">What you get</p>
-      <h2>Every stuck account is one of four patterns.</h2>
+      <h2>Every stuck account is one of five patterns.</h2>
       <p class="lead">Let's find where yours is stuck.</p>
       <div class="car">
         <div class="track" id="track" aria-label="The four patterns">
@@ -201,6 +203,7 @@
           <div class="tcard"><canvas data-k="R" data-off="2.7" width="640" height="400"></canvas><div class="tc"><h3>The slow rot</h3><p>The numbers look fine and sales keep getting worse.</p></div></div>
           <div class="tcard"><canvas data-k="O" data-off="4.9" width="640" height="400"></canvas><div class="tc"><h3>The one-ad account</h3><p>One ad carries everything, and every ad dies.</p></div></div>
           <div class="tcard"><canvas data-k="P" data-off="1.6" width="640" height="400"></canvas><div class="tc"><h3>Starting from zero</h3><p>No spend yet, so you get to build it right.</p></div></div>
+          <div class="tcard"><canvas data-k="X" data-off="3.3" width="640" height="400"></canvas><div class="tc"><h3>The offer problem</h3><p>The ads work. The math behind them doesn't.</p></div></div>
         </div>
         <button class="arrow prev" id="carPrev" type="button" aria-label="Previous pattern">&larr;</button>
         <button class="arrow next" id="carNext" type="button" aria-label="Next pattern">&rarr;</button>
@@ -255,6 +258,7 @@
         <p id="rLine" style="font-weight:600"></p>
         <div class="viz" aria-hidden="true"><canvas id="rViz" width="640" height="400"></canvas></div>
         <p class="mech" id="rMech"></p>
+        <div class="econ" id="rEcon" hidden></div>
         <h3>The fix, in order</h3>
         <ol class="fixes" id="rFixes"></ol>
       </div>
@@ -323,6 +327,29 @@
       { t: "Physical products", v: "ecom" },
       { t: "Software", v: "saas" },
     ]},
+    // Economics: what a customer is worth and what one costs, in bands that fit what they sell (the Outspend reel's LTV to CAC check).
+    // Each variant's opts are [label, number, kind]; number is the band midpoint, null means "I don't know".
+    { id: "val1", econ: true, variants: {
+      info:    { q: "What does your main offer sell for?", help: "The front-end price one buyer pays.", opts: [["Under $500", 250], ["$500 to $2,000", 1250], ["$2,000 to $5,000", 3500], ["$5,000 to $10,000", 7500], ["$10,000 to $20,000", 15000], ["Over $20,000", 30000], ["I don't know", null]] },
+      service: { q: "What does a client pay you?", help: "Per month on a retainer, or the fee if it's a one-time project.", opts: [["Under $1,000 a month", 500], ["$1,000 to $3,000 a month", 2000], ["$3,000 to $10,000 a month", 6500], ["$10,000 to $25,000 a month", 17500], ["Over $25,000 a month", 37500], ["A one-time project under $5,000", 2500, "project"], ["A one-time project over $5,000", 10000, "project"], ["I don't know", null]] },
+      local:   { q: "What is an average job worth?", opts: [["Under $300", 150], ["$300 to $1,000", 650], ["$1,000 to $5,000", 3000], ["Over $5,000", 7500], ["I don't know", null]] },
+      ecom:    { q: "What is your average order value?", opts: [["Under $30", 20], ["$30 to $75", 50], ["$75 to $150", 110], ["Over $150", 225], ["I don't know", null]] },
+      saas:    { q: "What does an account pay per month?", opts: [["Under $50", 25], ["$50 to $200", 125], ["$200 to $1,000", 600], ["Over $1,000", 1500], ["I don't know", null]] },
+    }},
+    { id: "val2", econ: true, when: () => !(optOf("val1") && optOf("val1").kind === "project"), variants: {
+      info:    { q: "Is there anything to buy after it?", opts: [["Nothing yet", 1], ["A one-time upsell", 1.5], ["A monthly membership or continuity", 2], ["A high-ticket backend", 3]] },
+      service: { q: "How long does a typical client stay?", opts: [["Under 3 months", 2], ["3 to 6 months", 4.5], ["6 to 12 months", 9], ["Over a year", 18]] },
+      local:   { q: "Do customers come back?", opts: [["Usually once", 1], ["Every few years", 1.5], ["Every year", 3], ["On a maintenance plan", 5]] },
+      ecom:    { q: "How many times does a customer order in a year?", opts: [["Once", 1], ["Two or three", 2.5], ["Four to six", 5], ["Seven or more, or it's a subscription", 12]] },
+      saas:    { q: "How long does an account stay?", opts: [["Under 6 months", 3], ["6 to 12 months", 9], ["One to two years", 18], ["Over two years", 36]] },
+    }},
+    { id: "cacBand", econ: true, when: () => (answerValue("spend") || 0) > 0, variants: {
+      info:    { q: "What does a buyer cost you from ads right now?", help: "Cost per customer, not per lead.", opts: [["Under $200", 100], ["$200 to $1,000", 600], ["$1,000 to $3,000", 2000], ["$3,000 to $8,000", 5500], ["Over $8,000", 12000], ["I don't know", null]] },
+      service: { q: "What does a new client cost you from ads?", help: "Per signed client, not per lead or per call.", opts: [["Under $250", 125], ["$250 to $1,000", 625], ["$1,000 to $5,000", 3000], ["Over $5,000", 7500], ["I don't know", null]] },
+      local:   { q: "What does a booked job cost you from ads?", opts: [["Under $100", 50], ["$100 to $300", 200], ["$300 to $1,000", 650], ["Over $1,000", 1500], ["I don't know", null]] },
+      ecom:    { q: "What does a first order cost you from ads?", opts: [["Under $20", 10], ["$20 to $60", 40], ["$60 to $150", 105], ["Over $150", 225], ["I don't know", null]] },
+      saas:    { q: "What does a paying account cost you from ads?", opts: [["Under $100", 50], ["$100 to $500", 300], ["$500 to $2,500", 1500], ["Over $2,500", 3750], ["I don't know", null]] },
+    }},
     { id: "cac", q: "What has your cost per customer looked like over the last 90 days?", help: "Cost per customer, or per qualified call, not cost per lead.", primary: true, opts: [
       { t: "It goes up every time I increase the budget", s: { C: 2 } },
       { t: "It's flat, but the leads keep getting worse", s: { R: 2 } },
@@ -356,6 +383,36 @@
     ]},
   ];
 
+  QUESTIONS.forEach((q) => { if (q.variants) Object.values(q.variants).forEach((v) => { v.opts = v.opts.map(([t, n, kind]) => ({ t, v: n, kind })); }); });
+  // The question shown for an id: the variant for what they sell, or the question itself.
+  const qdef = (q) => (q.variants ? (q.variants[answerValue("sell")] || q.variants.info) : q);
+  const active = () => QUESTIONS.filter((q) => !q.when || q.when());
+  function optOf(id) { const q = QUESTIONS.find((x) => x.id === id); if (!q) return null; const d = qdef(q); return d.opts[state.answers[id]] || null; }
+  const VERT = { info: "info products", service: "services", local: "home services", ecom: "e-commerce", saas: "software" };
+  const CAC_FLOOR = { info: 200, service: 250, local: 100, ecom: 20, saas: 100 };
+  // What a customer is worth, what one costs, and the ratio between them. Bucket: offer (< 1 to 2), warn (< 1 to 3), ok, unknown, or na (no spend yet).
+  function econ() {
+    const sells = answerValue("sell"), v1 = optOf("val1"), v2 = optOf("val2"), cb = optOf("cacBand");
+    const spend = answerValue("spend") || 0;
+    let value = null, monthly = null;
+    if (v1 && v1.v != null) {
+      if (v1.kind === "project") value = v1.v;
+      else if (v2 && v2.v != null) { value = v1.v * v2.v; if (sells === "service" || sells === "saas") monthly = v1.v; }
+      else value = v1.v;
+    }
+    const cac = cb && cb.v != null ? cb.v : null;
+    const ratio = value != null && cac ? value / cac : null;
+    let bucket = "unknown";
+    if (spend === 0) bucket = "na"; else if (ratio != null) bucket = ratio < 2 ? "offer" : ratio < 3 ? "warn" : "ok";
+    const payback = monthly && cac ? cac / monthly : null;
+    const floor = CAC_FLOOR[sells] || 100;
+    const unknown = (v1 && v1.v == null) || (spend > 0 && cb && cb.v == null);
+    const zeroCheck = spend === 0 && value != null && value < floor * 3;
+    return { sells, value, cac, ratio, bucket, payback, monthly, floor, unknown, zeroCheck };
+  }
+  const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
+  const ratioText = (e) => "$" + e.ratio.toFixed(2); // what a dollar of ad spend brings back
+
   const REEL = {
     scaleWall:  { t: "How to break past the scale wall", u: "https://www.instagram.com/reel/DfVW3--PoZ1/" },
     angles:     { t: "How to test new ad angles", u: "https://www.instagram.com/reel/DfXrim6xnyH/" },
@@ -375,7 +432,7 @@
 
   const RESULTS = {
     C: {
-      eyebrow: "Pattern 1 of 4", title: "The ceiling account",
+      eyebrow: "Pattern 1 of 5", title: "The ceiling account",
       line: "Your account works at one budget and falls apart above it.",
       mech: "Every ad finds a pocket of people who respond to it. Your current ads have found their pockets and bought most of the people in them. When you add budget, Meta has to buy people outside those pockets, and they cost more, so your cost per customer climbs and you pull the budget back down.",
       fixes: [
@@ -386,7 +443,7 @@
       reels: ["scaleWall", "angles", "anatomy", "three"],
     },
     R: {
-      eyebrow: "Pattern 2 of 4", title: "The slow rot",
+      eyebrow: "Pattern 2 of 5", title: "The slow rot",
       line: "Your numbers look fine and your sales keep getting worse.",
       mech: "Meta finds more of whoever your optimization event rewards. When that event is a click, a view or a cheap lead, Meta gets very good at finding clickers and cheap leads. The ads with the best-looking metrics are teaching it to find the wrong people, and the pixel is starved of the one signal that matters, which is a sale.",
       fixes: [
@@ -397,7 +454,7 @@
       reels: ["vanity", "cheap", "hooks", "landing"],
     },
     O: {
-      eyebrow: "Pattern 3 of 4", title: "The one-ad account",
+      eyebrow: "Pattern 3 of 5", title: "The one-ad account",
       line: "One ad is carrying your whole account, and every ad dies.",
       mech: "An ad fatigues because the pocket it speaks to runs out of people. When most of your spend sits on one winner, its decline is your account's decline, and nothing in the pipeline is ready to take over. You need a bench of winners before this one fades.",
       fixes: [
@@ -408,7 +465,7 @@
       reels: ["fatigue", "anatomy", "aboCbo", "minimums"],
     },
     P: {
-      eyebrow: "Pattern 4 of 4", title: "Starting from zero",
+      eyebrow: "Pattern 4 of 5", title: "Starting from zero",
       line: "You haven't spent a dollar yet, which means you get to build it right.",
       mech: "Most accounts get stuck because of three decisions made in the first month: optimizing for the wrong event, launching one ad instead of a batch, and sending cold traffic to a page built for warm traffic. You can skip all three.",
       fixes: [
@@ -417,6 +474,17 @@
         ["Judge at two to three times your target cost.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
       ],
       reels: ["aboCbo", "angles", "andromeda", "cpm"],
+    },
+    X: {
+      eyebrow: "Pattern 5 of 5", title: "The offer problem",
+      line: "Your ads are working. The math behind them isn't.",
+      mech: (e) => `For every dollar you spend to get a customer, you get about ${ratioText(e)} back over the time they stay with you. One to three is strong, meaning every dollar comes back three times. You're under one to two. At that number the ads can be perfect and you still can't afford the customers they bring in, and every new customer costs a little more as you spend more, so the gap only widens. More angles, a better optimization event or new creative won't change it, because the problem sits after the click: what a customer pays you, and how many times.`,
+      fixes: [
+        ["Give them more to buy.", "If your customers buy once and never again, the fastest lever is after the first sale: an upsell, a bigger package, or something they pay for every month. A customer who keeps paying in month two and month twelve is what lets a business pay more for a customer up front."],
+        ["Then check the price and the margin.", "If there's nothing to add after the sale, you need profit on the first purchase. Raise the price or cut what it costs to deliver until a customer is worth at least twice what they cost."],
+        ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth three times what they cost, every fix on the other four pages starts paying. Until then, hold the spend where it is."],
+      ],
+      reels: ["outspend", "cheap", "vanity", "scaleWall"],
     },
   };
 
@@ -441,20 +509,20 @@
 
   // ---- Questions ----
   function renderQ() {
-    const q = QUESTIONS[state.i];
-    $("bar").style.width = `${Math.round((state.i / QUESTIONS.length) * 100)}%`;
-    $("stepLabel").textContent = `Question ${state.i + 1} of ${QUESTIONS.length}`;
+    const list = active(), q0 = list[state.i], q = qdef(q0);
+    $("bar").style.width = `${Math.round((state.i / list.length) * 100)}%`;
+    $("stepLabel").textContent = `Question ${state.i + 1} of ${list.length}`;
     $("qText").textContent = q.q;
     $("qHelp").textContent = q.help || "";
     $("qHelp").hidden = !q.help;
-    $("qCount").textContent = `${state.i + 1} / ${QUESTIONS.length}`;
+    $("qCount").textContent = `${state.i + 1} / ${list.length}`;
     $("backBtn").style.visibility = state.i === 0 ? "hidden" : "visible";
     const box = $("opts");
     box.innerHTML = "";
     q.opts.forEach((o, k) => {
       const b = document.createElement("button");
       b.type = "button";
-      b.className = "opt" + (state.answers[q.id] === k ? " picked" : "");
+      b.className = "opt" + (state.answers[q0.id] === k ? " picked" : "");
       b.innerHTML = `<span class="k">${String.fromCharCode(65 + k)}</span><span></span>`;
       b.lastElementChild.textContent = o.t;
       b.addEventListener("click", () => pick(k));
@@ -465,14 +533,15 @@
   let picking = false;
   function pick(k) {
     if (picking) return; picking = true;
-    const q = QUESTIONS[state.i];
-    state.answers[q.id] = k;
-    track("quiz_answer", { question: q.id, answer: q.opts[k].t });
+    const list = active(), q0 = list[state.i], q = qdef(q0);
+    state.answers[q0.id] = k;
+    if (q0.id === "sell") ["val1", "val2", "cacBand"].forEach((id) => { delete state.answers[id]; }); // the economics bands depend on it
+    track("quiz_answer", { question: q0.id, answer: q.opts[k].t });
     const opts = [...$("opts").children];
     opts.forEach((el, j) => el.classList.toggle("picked", j === k));
     const badge = opts[k].querySelector(".k"); badge.textContent = "\u2713";
     // The beat: a ring from the badge, dots arcing up into the progress bar, the bar growing when they land.
-    const frac = (state.i + 1) / QUESTIONS.length;
+    const frac = (state.i + 1) / list.length;
     const b = badge.getBoundingClientRect(), pr = $("bar").parentElement.getBoundingClientRect();
     const quick = FX.answer({ x: b.left + b.width / 2, y: b.top + b.height / 2 }, { x: pr.left + pr.width * frac, y: pr.top + pr.height / 2 });
     const T = quick ? [0, 0, 140] : [300, 420, 470];
@@ -480,7 +549,7 @@
     setTimeout(() => { $("qCard").classList.add("out"); }, T[1]);
     setTimeout(() => {
       picking = false;
-      if (state.i < QUESTIONS.length - 1) { state.i++; renderQ(); }
+      if (state.i < active().length - 1) { state.i++; renderQ(); }
       else { $("qCard").classList.remove("out"); score(); $("stepLabel").textContent = "Almost there"; show("s-gate"); setTimeout(() => $("firstName").focus(), 300); }
     }, T[2]);
   }
@@ -488,6 +557,7 @@
     const s = { C: 0, R: 0, O: 0 };
     let pre = false, primary = null;
     QUESTIONS.forEach((q) => {
+      if (q.econ) return;
       const o = q.opts[state.answers[q.id]];
       if (!o) return;
       if (o.pre) pre = true;
@@ -499,10 +569,11 @@
     if (!pre) {
       const order = ["R", "C", "O"].sort((a, b) => (s[b] + (b === primary ? 0.5 : 0)) - (s[a] + (a === primary ? 0.5 : 0)));
       key = order[0];
+      if (econ().bucket === "offer") key = "X"; // the math fails before any ads fix can work
     }
     state.result = key;
   }
-  function answerValue(id) { const q = QUESTIONS.find((x) => x.id === id); const o = q.opts[state.answers[id]]; return o ? (o.v !== undefined ? o.v : o.t) : null; }
+  function answerValue(id) { const o = optOf(id); return o ? (o.v !== undefined ? o.v : o.t) : null; }
 
   // ---- Gate ----
   $("leadForm").addEventListener("submit", async (e) => {
@@ -514,7 +585,8 @@
     $("gateErr").textContent = "";
     $("gateBtn").disabled = true; $("gateBtn").textContent = "One second…";
     // Flat keys so GoHighLevel's inbound-webhook mapper can pick each one as a contact or custom field.
-    const text = (id) => QUESTIONS.find((x) => x.id === id).opts[state.answers[id]]?.t ?? "";
+    const text = (id) => optOf(id)?.t ?? "";
+    const ecn = econ();
     const payload = {
       first_name: name, email,
       quiz_result: RESULTS[state.result].title, quiz_result_key: state.result, quiz_route: routeFor().kind,
@@ -523,6 +595,8 @@
       role: answerValue("who"), sells: answerValue("sell"),
       score_ceiling: state.scores.C, score_rot: state.scores.R, score_reliant: state.scores.O,
       q_cost_per_customer: text("cac"), q_new_concepts: text("angles"), q_best_ad_share: text("share"), q_how_you_judge: text("judge"), q_optimization_event: text("event"),
+      q_value_1: text("val1"), q_value_2: text("val2"), cac_band: text("cacBand"),
+      value_estimate: ecn.value ?? "", cac_estimate: ecn.cac ?? "", ltv_cac_ratio: ecn.ratio != null ? Math.round(ecn.ratio * 10) / 10 : "", ratio_bucket: ecn.bucket, payback_months: ecn.payback != null ? Math.round(ecn.payback) : "",
       source: CONFIG.source, utm_source: utm.utm_source || "", utm_medium: utm.utm_medium || "", utm_campaign: utm.utm_campaign || "", utm_content: utm.utm_content || "",
       submitted_at: new Date().toISOString(), page: location.href,
     };
@@ -561,7 +635,18 @@
     $("rEyebrow").textContent = r.eyebrow;
     $("rTitle").textContent = r.title;
     $("rLine").textContent = r.line;
-    $("rMech").textContent = r.mech;
+    const e = econ();
+    $("rMech").textContent = typeof r.mech === "function" ? r.mech(e) : r.mech;
+    const notes = [];
+    if (state.result !== "X") {
+      if (e.bucket === "warn") notes.push(`Your numbers work, barely. For every dollar you spend to get a customer you get about ${ratioText(e)} back. The fixes below bring the cost of a customer down, and that helps. The value side has to move too: something to buy after the first sale, or a price change. Accounts at this ratio get to one to three by doing both at once.`);
+      if (e.unknown && e.bucket !== "na") notes.push(`You answered "I don't know" for what a customer costs or what one is worth. Everything on this page depends on those two numbers. Finding them is the first fix, before any of the ones below.`);
+      if (e.zeroCheck) notes.push(`One thing before the first ad. At about ${money(e.value)} per customer, your ads have to buy a customer for under ${money(e.value / 3)} to make sense, and in ${VERT[e.sells] || "your market"} that's a hard number to hit. Build the backend or raise the price first, then launch.`);
+      if (e.payback != null && e.payback > 12) notes.push(`At ${money(e.cac)} against ${money(e.monthly)} a month, you wait about ${Math.round(e.payback)} months to get the ad spend back. The offer works, but you're funding every customer for a year. An annual plan, a setup fee or a front-end product shortens that, and it's worth fixing before the budget goes up.`);
+      else if (e.payback != null && e.payback >= 6) notes.push(`You get the ad spend back in about ${Math.round(e.payback)} months. Budget for that gap before you scale, because every new customer is a loan you make to yourself.`);
+    }
+    const ec = $("rEcon"); ec.innerHTML = ""; ec.hidden = !notes.length;
+    notes.forEach((n) => { const pp = document.createElement("p"); pp.textContent = n; ec.appendChild(pp); });
     const fx = $("rFixes"); fx.innerHTML = "";
     r.fixes.forEach(([b, s]) => { const li = document.createElement("li"); li.innerHTML = "<div><b></b><span></span></div>"; li.querySelector("b").textContent = b; li.querySelector("span").textContent = s; fx.appendChild(li); });
     const sg = $("signals"); sg.innerHTML = "";
@@ -573,7 +658,7 @@
       sg.appendChild(row);
       requestAnimationFrame(() => { row.querySelector("i").style.width = `${Math.min(100, (state.scores[k] / max) * 100)}%`; });
     });
-    if (state.result === "P") sg.parentElement.hidden = true; else sg.parentElement.hidden = false;
+    sg.parentElement.hidden = state.result === "P" || state.result === "X";
     const rl = $("reels"); rl.innerHTML = "";
     r.reels.forEach((k) => { const a = document.createElement("a"); a.className = "reel"; a.href = REEL[k].u; a.target = "_blank"; a.rel = "noopener"; a.innerHTML = "<small>Reel</small><b></b>"; a.querySelector("b").textContent = REEL[k].t; rl.appendChild(a); });
     const c = routeFor();
@@ -792,7 +877,38 @@
       Y.judge.forEach((l, i) => label(l, 320, Y.jy + i * Y.js * 1.9, ma * prog(T, 2.2, 0.5), Y.js, 700));
     }
 
-    const SCENES = { C: vizC, R: vizR, O: vizO, P: vizP }, STILL = { C: 4.6, R: 5.5, O: 6.8, P: 5.2 };
+    // X: the ads work, the math doesn't. A cost bar and a worth bar; cost climbs with spend; worth only grows when there is more to buy.
+    function vizX(t) {
+      const L = 9.5, T = t % L, s = win(T, 0, L, 0.4, 0.5);
+      const Y = PORTRAIT
+        ? { bx: 200, wx: 440, base: 640, bw: 130, hx: 320, hy: 76, ha: "center", px: 320, py: 710, unit: 0.9, lc: "What a customer costs", lw: "What a customer is worth" }
+        : { bx: 95, wx: 255, base: 330, bw: 80, hx: 365, hy: 95, ha: "left", px: 470, py: 300, unit: 0.62, lc: "Cost", lw: "Worth" };
+      const grow = prog(T, 0.3, 1.0), climb = ease(prog(T, 3.2, 2.0)), stack = prog(T, 6.2, 2.4), U = Y.unit;
+      const cost = (100 + 70 * climb) * grow * U, worthBase = 130 * grow * U;
+      col(CORAL); rrect(Y.bx - Y.bw / 2, Y.base - cost, Y.bw, cost, 8, s, 2, true);
+      col(GREEN); rrect(Y.wx - Y.bw / 2, Y.base - worthBase, Y.bw, worthBase, 8, s, 2, true);
+      const n = 4, blockH = (170 / n) * U, names = ["month 2", "month 3", "an upsell", "month 12"];
+      for (let i = 0; i < n; i++) {
+        const p = clamp(stack * n - i); if (p <= 0) break;
+        const y0 = Y.base - worthBase - blockH * i, h = blockH * p;
+        col(GREEN); rrect(Y.wx - Y.bw / 2, y0 - h, Y.bw, h, 6, s * 0.9, 2, true);
+        col(NAVY); label(names[i], Y.wx, y0 - h / 2, s * p * (h > 14 ? 1 : 0), 11, 700);
+      }
+      col(WHITE); line(Y.bx - Y.bw * 0.7, Y.base, Y.wx + Y.bw * 0.7, Y.base, s * 0.5, 2);
+      label(Y.lc, Y.bx, Y.base + 18, s, 12, 700);
+      label(Y.lw, Y.wx, Y.base + 18, s, 12, 700);
+      const A = win(T, 0.5, 3.2, 0.3, 0.3), B = win(T, 3.2, 6.2, 0.3, 0.3), Cc = win(T, 6.2, L - 0.3, 0.3, 0.3);
+      headline(["Your ads are working.", "The math isn't."], Y.hx, Y.hy, s * A, WHITE, 21, Y.ha);
+      headline(["Costs climb", "as you spend more."], Y.hx, Y.hy, s * B, CORAL, 21, Y.ha);
+      headline(["Give them", "more to buy."], Y.hx, Y.hy, s * Cc, GREEN, 21, Y.ha);
+      pill(Y.px, Y.py, "One to 1.3", s * A, 0, 12);
+      pill(Y.px, Y.py, "Costs more than it's worth", s * B, 0, 12, CORAL);
+      pill(Y.px, Y.py, "One to three", s * Cc, 1, 12, GREEN);
+      if (B > 0.004) { col(CORAL); xMark(Y.bx, Y.base - cost - 18, 8, prog(T, 4.6, 0.4), s * B, 2.5); }
+      col(GREEN); burst(Y.wx, Y.base - worthBase - 170 * U, t, Math.floor(t / L) * L + 8.4, 20, 90, 0.7, s);
+    }
+
+    const SCENES = { C: vizC, R: vizR, O: vizO, P: vizP, X: vizX }, STILL = { C: 4.6, R: 5.5, O: 6.8, P: 5.2, X: 8.2 };
     const reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // One engine, several canvases: the result panel (auto layout) and the intro teaser (always landscape).
     function setup(c, mode) {
