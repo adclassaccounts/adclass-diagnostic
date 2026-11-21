@@ -505,6 +505,7 @@
   function show(id) { screens.forEach((s) => { $(s).hidden = s !== id; }); window.scrollTo({ top: 0, behavior: "smooth" }); }
   function track(ev, data) {
     try { (window.dataLayer = window.dataLayer || []).push({ event: ev, ...data }); } catch (e) {}
+    try { if (typeof gtag === "function") gtag("event", ev, data); } catch (e) {} // straight to GA4; the GTM container has no tags for these
     try {
       if (typeof fbq !== "function") return;
       if (ev === "quiz_start") fbq("trackCustom", "QuizStart");
@@ -546,7 +547,7 @@
     const list = active(), q0 = list[state.i], q = qdef(q0);
     state.answers[q0.id] = k;
     if (q0.id === "sell") ["val1", "val2", "cacBand"].forEach((id) => { delete state.answers[id]; }); // the economics bands depend on it
-    track("quiz_answer", { question: q0.id, answer: q.opts[k].t });
+    track("quiz_answer", { question: q0.id, step: state.i + 1, answer: q.opts[k].t });
     const opts = [...$("opts").children];
     opts.forEach((el, j) => el.classList.toggle("picked", j === k));
     const badge = opts[k].querySelector(".k"); badge.textContent = "\u2713";
