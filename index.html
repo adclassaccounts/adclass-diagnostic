@@ -500,6 +500,172 @@ posthog.init("phc_odwSK8ETDJ7CwLcTzi3EU5zVUQwM4dHK6bmqaqmybUvh", { api_host: "ht
     },
   };
 
+  // Result copy by what they sell. The default (RESULTS) is written for info and coaching; these swap the mechanism
+  // paragraph and the 3 fixes for the other verticals so the advice uses their numbers and their funnel. Reels stay the same.
+  const RESULT_VARIANTS = {
+    C: {
+      local: {
+        mech: "Every ad finds a pocket of homeowners who respond to it. In a service area that pocket is small, and your current ads have already reached most of the people in your radius who were ready for that offer. When you add budget, Meta shows the same ads to the same households more often, or pushes them to people who aren't in the market, so your cost per booked job climbs and you pull the budget back down.",
+        fixes: [
+          ["Change the offer, not the budget.", "A free inspection, a $49 tune-up, a seasonal special and a financing angle are 4 different reasons to call. Run 5 or more of those as separate ads in the next 30 days. The same photo with a new headline doesn't count."],
+          ["Judge on booked jobs, not form fills.", "Give each offer its own ad set and let it spend 2 to 3 times what a booked job should cost you before you call it. Cheap leads that never answer the phone are the expensive ones."],
+          ["Then widen the net.", "Once the offers are tested, grow the service area or add a second service line before you add a second platform. A new radius is a new pocket."],
+        ],
+      },
+      ecom: {
+        mech: "Every ad finds a pocket of shoppers who respond to it. Your current ads have found their pockets and sold to most of the people in them. When you add budget, Meta has to buy shoppers outside those pockets, and they cost more, so ROAS drops and you pull the budget back down.",
+        fixes: [
+          ["Launch new angles, not new edits.", "10 or more new concepts in the next 30 days, each a different reason to buy: the problem it solves, the ingredient, the comparison, the unboxing, the review, the gift. A new product shot of the same pitch opens no new pocket."],
+          ["Give every test a fair shot.", "Judge an ad on cost per first order after it spends 2 to 3 times your target, in its own ad set. ROAS on day 2 tells you nothing."],
+          ["Climb the ladder in order.", "New angles first, then a landing page built for cold traffic instead of the product page, then a new platform."],
+        ],
+      },
+      saas: {
+        mech: "Every ad finds a pocket of buyers who respond to it. Your current ads have found their pockets and signed up most of the people in them. When you add budget, Meta has to buy outside those pockets, and they cost more, so your cost per paying account climbs and you pull the budget back down.",
+        fixes: [
+          ["Launch new angles.", "10 or more new concepts in the next 30 days, each a different job the product does: the hours it saves, the tool it replaces, the report it produces, the integration. Each one is a new pocket of buyers."],
+          ["Give every test a fair shot.", "Judge an ad on cost per paying account or qualified demo after it spends 2 to 3 times your target, in its own ad set. Cost per signup is not the number."],
+          ["Climb the ladder in order.", "New angles first, then a funnel built for cold traffic (a free tool, a template, a calculator) instead of the signup page, then a new platform."],
+        ],
+      },
+      service: {
+        fixes: [
+          ["Launch new angles.", "10 or more new concepts in the next 30 days, each a different reason to book a call: the outcome, the niche, the proof, the process, the guarantee. New edits of the same ad don't count."],
+          ["Give every test a fair shot.", "Judge an ad on cost per qualified call after it spends 2 to 3 times your target, in its own ad set."],
+          ["Climb the ladder in order.", "New angles first, then a funnel for people who won't book a call yet (a case study, a free audit, a low-ticket offer), then a new platform."],
+        ],
+      },
+    },
+    R: {
+      local: {
+        mech: "Meta finds more of whoever your optimization event rewards. When that event is a form fill, Meta gets very good at finding people who fill out forms: price shoppers, tire kickers and people outside your area. The lead count looks fine while the number of booked jobs slides.",
+        fixes: [
+          ["Optimize for a qualified lead, not a form fill.", "Fire the event when a lead is confirmed by phone or booked, and send it back to Meta through the Conversions API from your CRM. If that's under 50 a week, optimize for calls over 60 seconds."],
+          ["Judge every ad on cost per booked job.", "Cost per lead tells you who filled out the form. Match leads to jobs in your CRM every week and turn off the ads whose leads never book."],
+          ["Change one thing, then hold for 14 days.", "Every change to the event retrains Meta. Switch it, leave it alone for 2 weeks, and judge it after."],
+        ],
+      },
+      ecom: {
+        mech: "Meta finds more of whoever your optimization event rewards. When that event is an add-to-cart, a view or a click, Meta gets very good at finding browsers. Clicks and carts look healthy while purchases and ROAS slide, and the pixel is starved of the one signal that matters, which is an order.",
+        fixes: [
+          ["Optimize for purchase, always.", "If purchases are under 50 a week, consolidate ad sets until they aren't, and send every purchase server-side through the Conversions API so Meta sees all of them."],
+          ["Judge ads on cost per first order.", "Click-through rate, hook rate and cost per add-to-cart tell you who browsed. They don't tell you who bought."],
+          ["Change one thing, then hold for 14 days.", "Every pixel change retrains Meta, so change the event, leave it alone for 2 weeks, and judge it after."],
+        ],
+      },
+      saas: {
+        mech: "Meta finds more of whoever your optimization event rewards. When that event is a trial signup, a click or a page view, Meta gets very good at finding people who sign up for things and never pay. Signups look healthy while paid conversions slide.",
+        fixes: [
+          ["Optimize for the event closest to revenue.", "A paid conversion, an activated trial or a qualified demo, sent back through the Conversions API. If that fires under 50 times a week, build a qualified-signup event that does."],
+          ["Judge ads on cost per paying account.", "Cost per signup tells you who was curious. It doesn't tell you who paid."],
+          ["Change one thing, then hold for 14 days.", "Every pixel change retrains Meta, so change the event, leave it alone for 2 weeks, and judge it after."],
+        ],
+      },
+      service: {
+        fixes: [
+          ["Optimize for the qualified call, not the lead.", "Fire the event when the call is booked and the lead qualifies, sent back through the Conversions API. If that's under 50 a week, build a qualified-application event that does."],
+          ["Judge ads on cost per signed client.", "Cost per lead and cost per call tell you who was curious. Match calls to closes every week and judge the ads on that."],
+          ["Change one thing, then hold for 14 days.", "Every pixel change retrains Meta, so change the event, leave it alone for 2 weeks, and judge it after."],
+        ],
+      },
+    },
+    O: {
+      local: {
+        mech: "An ad fatigues because the households it speaks to run out. In a fixed service area that happens faster than anywhere else: the same 40,000 homeowners see the same roof photo 6 times and stop noticing. When most of your spend sits on that one ad, its decline is your whole month, and nothing is ready to take over.",
+        fixes: [
+          ["Make 5 versions of the winner.", "Same offer, different formats: a before-and-after, a 15-second crew video, a customer review as a static, a price-point ad, a photo of the truck in a neighborhood people recognize."],
+          ["Keep a testing ad set running.", "3 to 8 ads per ad set in ABO, with a new offer or format every week, so the next winner is warming up before this one fades."],
+          ["Watch the spend on one ad.", "When most of the budget sits on one ad, launch the next batch now, not when it dies."],
+        ],
+      },
+      ecom: {
+        mech: "An ad fatigues because the pocket it speaks to runs out of shoppers. When most of your spend sits on one hero video, its decline is your account's decline, and nothing in the pipeline is ready to take over. You need a bench of winners before this one fades.",
+        fixes: [
+          ["Multiply the winner's angle.", "5 versions in different formats: a customer testimonial, a static with the price, a product demo, a comparison, a founder talking head. Same reason to buy, different ways to say it."],
+          ["Run a standing testing campaign.", "3 to 8 ads per ad set in ABO, with new concepts every week, so a replacement is always warming up."],
+          ["Watch the spend on one ad.", "When most of the budget sits on one ad, launch the next batch now, not when it dies."],
+        ],
+      },
+      saas: {
+        fixes: [
+          ["Multiply the winner's angle.", "5 versions in different formats: a product demo, a founder talking head, a static with the one-line pitch, a customer quote, a before-and-after of the workflow. Same reason to buy, different ways to say it."],
+          ["Run a standing testing campaign.", "3 to 8 ads per ad set in ABO, with new concepts every week, so a replacement is always warming up."],
+          ["Watch the spend on one ad.", "When most of the budget sits on one ad, launch the next batch now, not when it dies."],
+        ],
+      },
+      service: {
+        fixes: [
+          ["Multiply the winner's angle.", "5 versions in different formats: a client result as a static, a talking head, a screen recording of the work, text on screen, a short case study. Same reason to book, different ways to say it."],
+          ["Run a standing testing campaign.", "3 to 8 ads per ad set in ABO, with new concepts every week, so a replacement is always warming up."],
+          ["Watch the spend on one ad.", "When most of the budget sits on one ad, launch the next batch now, not when it dies."],
+        ],
+      },
+    },
+    P: {
+      local: {
+        mech: "Most home-service accounts get stuck because of 3 decisions made in the first month: optimizing for form fills, launching 1 ad, and sending people to the homepage. You can skip all 3.",
+        fixes: [
+          ["Optimize for a booked job or a call.", "Set up call tracking and the Conversions API before the first ad runs, so Meta learns from the leads that turned into jobs, not the ones that filled out a form."],
+          ["Launch 5 offers, each in its own ad set.", "A free inspection, a seasonal special, financing, an emergency-service angle and a review-led ad. You don't know yet which one your area responds to."],
+          ["Send them to a page that books.", "One service, one offer, one form or a click-to-call button. Judge each ad set only after it spends 2 to 3 times what a booked job should cost you."],
+        ],
+      },
+      ecom: {
+        mech: "Most stores get stuck because of 3 decisions made in the first month: optimizing for add-to-cart, launching 1 ad, and sending cold traffic straight to the product page. You can skip all 3.",
+        fixes: [
+          ["Optimize for purchase from day 1.", "Pixel and Conversions API wired up before the first ad runs, even while purchases are few. Meta learns from the right signal from the start."],
+          ["Launch 5 to 10 angles.", "Each in its own ad set, each a different reason to buy, so you learn which pocket is yours. One ad teaches you nothing."],
+          ["Judge at 2 to 3 times your target cost per order.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
+        ],
+      },
+      saas: {
+        mech: "Most software accounts get stuck because of 3 decisions made in the first month: optimizing for trial signups, launching 1 ad, and sending cold traffic to the pricing page. You can skip all 3.",
+        fixes: [
+          ["Optimize for activation or payment.", "Wire the pixel and the Conversions API to the moment a trial becomes worth something, before the first ad runs."],
+          ["Launch 5 to 10 angles.", "Each in its own ad set, each a different job the product does, so you learn which pocket is yours. One ad teaches you nothing."],
+          ["Judge at 2 to 3 times your target cost per paying account.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
+        ],
+      },
+      service: {
+        fixes: [
+          ["Optimize for a booked, qualified call.", "Wire the pixel and the Conversions API to the booking before the first ad runs, not to the form fill."],
+          ["Launch 5 to 10 angles.", "Each in its own ad set, each a different reason to book, so you learn which pocket is yours. One ad teaches you nothing."],
+          ["Judge at 2 to 3 times your target cost per call.", "Most of your ads will lose. The point of the first month is finding the one that doesn't."],
+        ],
+      },
+    },
+    X: {
+      local: {
+        fixes: [
+          ["Raise the ticket.", "If the average job is a few hundred dollars, bundle it: inspection plus tune-up, a maintenance plan, a multi-year warranty. A $150 job can't pay for ads at $200 a lead."],
+          ["Then get the repeat.", "A maintenance plan or an annual service turns a 1-time job into 3 to 5 over the years, and that's what lets you pay more for a customer up front."],
+          ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth 3x what they cost, every fix on the other 4 pages starts paying. Until then, hold the spend where it is."],
+        ],
+      },
+      ecom: {
+        fixes: [
+          ["Raise the first order.", "Bundles, a free-shipping threshold just above your average order, and a post-purchase upsell. A $20 first order can't pay for a $40 customer."],
+          ["Then get the second order.", "A subscription or a reorder flow turns 1 order into 5, and that's what lets a store pay more for a customer up front."],
+          ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth 3x what they cost, every fix on the other 4 pages starts paying. Until then, hold the spend where it is."],
+        ],
+      },
+      saas: {
+        fixes: [
+          ["Fix retention before spend.", "If accounts leave inside 6 months, every dollar of ads buys a customer who leaves before paying it back. Onboarding and activation come before another angle."],
+          ["Then raise the price or add a tier.", "An annual plan or a higher tier raises what an account is worth and shortens payback. Break-even on the front end is fine when the account stays 18 months."],
+          ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth 3x what they cost, every fix on the other 4 pages starts paying. Until then, hold the spend where it is."],
+        ],
+      },
+      service: {
+        fixes: [
+          ["Add a retainer behind the project.", "If clients pay a one-time fee, put a monthly retainer behind it. A $2,500 project can't pay for a $3,000 client."],
+          ["Then keep them longer.", "A client who stays 9 months instead of 3 is worth 3x, and that's what lets an agency pay more for a client up front."],
+          ["Then come back to the ads.", "The business that can pay the most for a customer gets to buy the most customers. Once yours is worth 3x what they cost, every fix on the other 4 pages starts paying. Until then, hold the spend where it is."],
+        ],
+      },
+    },
+  };
+
   // ---- State ----
   const state = { i: 0, answers: {}, scores: { C: 0, R: 0, O: 0 }, result: null };
   const $ = (id) => document.getElementById(id);
@@ -648,12 +814,14 @@ posthog.init("phc_odwSK8ETDJ7CwLcTzi3EU5zVUQwM4dHK6bmqaqmybUvh", { api_host: "ht
   }
   function renderResult() {
     const r = RESULTS[state.result];
+    const rv = (RESULT_VARIANTS[state.result] || {})[answerValue("sell")] || {}; // vertical copy, info is the default
     $("stepLabel").textContent = "Your result";
     $("rEyebrow").textContent = r.eyebrow;
     $("rTitle").textContent = r.title;
-    $("rLine").textContent = r.line;
+    $("rLine").textContent = rv.line || r.line;
     const e = econ();
-    $("rMech").textContent = typeof r.mech === "function" ? r.mech(e) : r.mech;
+    const mech = rv.mech || r.mech;
+    $("rMech").textContent = typeof mech === "function" ? mech(e) : mech;
     const notes = [];
     if (state.result !== "X") {
       if (e.bucket === "warn") notes.push(`Your numbers work, barely. For every $1 you spend to get a customer you get about ${ratioText(e)} back, an LTV to CAC ratio of ${ratioLabel(e)}. The fixes below bring the cost of a customer down, and that helps. The value side has to move too: something to buy after the first sale, or a price change. Accounts at this ratio get to 3:1 by doing both at once.`);
@@ -665,7 +833,7 @@ posthog.init("phc_odwSK8ETDJ7CwLcTzi3EU5zVUQwM4dHK6bmqaqmybUvh", { api_host: "ht
     const ec = $("rEcon"); ec.innerHTML = ""; ec.hidden = !notes.length;
     notes.forEach((n) => { const pp = document.createElement("p"); pp.textContent = n; ec.appendChild(pp); });
     const fx = $("rFixes"); fx.innerHTML = "";
-    r.fixes.forEach(([b, s]) => { const li = document.createElement("li"); li.innerHTML = "<div><b></b><span></span></div>"; li.querySelector("b").textContent = b; li.querySelector("span").textContent = s; fx.appendChild(li); });
+    (rv.fixes || r.fixes).forEach(([b, s]) => { const li = document.createElement("li"); li.innerHTML = "<div><b></b><span></span></div>"; li.querySelector("b").textContent = b; li.querySelector("span").textContent = s; fx.appendChild(li); });
     const sg = $("signals"); sg.innerHTML = "";
     const max = 8; const names = { C: "Ceiling", R: "Slow rot", O: "One-ad reliance" };
     ["C", "R", "O"].forEach((k) => {
