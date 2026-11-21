@@ -5,6 +5,8 @@
 <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-N4CNWVQ");</script>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZJ45LL5W1N"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-ZJ45LL5W1N");</script>
+<script>!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init("phc_odwSK8ETDJ7CwLcTzi3EU5zVUQwM4dHK6bmqaqmybUvh", { api_host: "https://us.i.posthog.com", person_profiles: "identified_only", capture_pageview: true });</script>
 <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","9547401458639686");fbq("track","PageView");</script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=9547401458639686&ev=PageView&noscript=1" /></noscript>
 <script>(function(){var s=document.createElement("script");s.type="text/javascript";s.src="https://t.adclass.com/v1/lst/universal-script?ph=c05c1bc1df7152adff0993615104b61c0e8b8db3c8efe36dde2c74073191a067&tag=!clicked&ref_url="+encodeURI(document.URL);(document.head||document.body).appendChild(s);})();</script>
@@ -506,6 +508,7 @@
   function track(ev, data) {
     try { (window.dataLayer = window.dataLayer || []).push({ event: ev, ...data }); } catch (e) {}
     try { if (typeof gtag === "function") gtag("event", ev, data); } catch (e) {} // straight to GA4; the GTM container has no tags for these
+    try { if (window.posthog && posthog.capture) posthog.capture(ev, data); } catch (e) {} // PostHog: funnels + session replay
     try {
       if (typeof fbq !== "function") return;
       if (ev === "quiz_start") fbq("trackCustom", "QuizStart");
@@ -613,6 +616,7 @@
       source: CONFIG.source, utm_source: utm.utm_source || "", utm_medium: utm.utm_medium || "", utm_campaign: utm.utm_campaign || "", utm_content: utm.utm_content || "",
       submitted_at: new Date().toISOString(), page: location.href,
     };
+    try { if (window.posthog && posthog.identify) posthog.identify(email, { email, name, quiz_result: payload.quiz_result, quiz_route: payload.quiz_route }); } catch (e) {}
     track("quiz_lead", { result: payload.quiz_result, route: payload.quiz_route, spend: payload.ad_spend });
     if (CONFIG.webhook) {
       try { await fetch(CONFIG.webhook, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), keepalive: true }); } catch (err) { /* never block the result on the webhook */ }
